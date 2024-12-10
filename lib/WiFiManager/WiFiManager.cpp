@@ -1,7 +1,8 @@
 #include "WiFiManager.h"
 
-const int MAX_ATTEMPTS = 10;        // The number of max consecutive wifi connection attempts
-const int DELAY_ATTEMPT = 1000;     // Delay between connection attempts
+const int MAX_ATTEMPTS = 10;                // The number of max consecutive wifi connection attempts
+const int DELAY_ATTEMPT = 1000;             // Delay between connection attempts
+const long CLIENT_COUNT_INTERVAL = 1000;    // Interval between checking softAP client counts
 
 // Accesspoint constants
 const char* AP_SSID = "TehoWatti";
@@ -11,14 +12,14 @@ WiFiManager::WiFiManager () {
     
 }
 
-// Tries to connect to WiFi with given credentials and ssid
+// Attempts to connect to given SSID, if fails, starts softAP to enable connectivity
 void WiFiManager::Connect(const char* ssid, const char* password) {
 
     begin(ssid, password);
 
     int attempt = 1;
 
-    while (status() != WL_CONNECTED && attempt-1 < MAX_ATTEMPTS) {
+    while (status() != WL_CONNECTED && attempt < MAX_ATTEMPTS) {
         Serial.print("Connection attempt: ");
         Serial.println(attempt);
         attempt++;
@@ -28,13 +29,16 @@ void WiFiManager::Connect(const char* ssid, const char* password) {
     if (status() == WL_CONNECTED) {
         Serial.println("WiFi connection established");
     } else {
-        Serial.println("Wifi connection failed to establish. Starting accesspoint");
-        
-        // Try to start softAP and report the result
-        Serial.println(softAP(AP_SSID) ? "Accesspoint ready" : "Accesspoint failed");
+        Serial.println("WiFi connection failed. Starting access point...");
 
-        Serial.print("Soft-AP IP address = ");
-        Serial.println(softAPIP());
+        // Try to start softAP and report the result
+        if (softAP(AP_SSID)) {
+            Serial.println("Access point ready.");
+            Serial.print("Soft-AP IP address = ");
+            Serial.println(softAPIP());
+        } else {
+            Serial.println("Failed to start Access Point.");
+        }
     }
 }
 
@@ -53,5 +57,31 @@ void WiFiManager::PrintStatus() {
         Serial.println(localIP());
     } else {
         Serial.println("Not connected to any WiFi.");
+    }
+}
+
+// Check the number of connected softAP clients in specified interval and report to Serial if changes
+void WiFiManager::CheckAPClientCount() {
+
+    // Run only if softAP is on and interval has passed
+    if (IsAPOn() && millis() - _clientCountLastCheckMillis > CLIENT_COUNT_INTERVAL) {
+        _clientCountLastCheckMillis = millis(); // set the timestamp for last check
+        
+        int currentClientCount = softAPgetStationNum();
+
+        if (currentClientCount != _clientCount) {
+            Serial.print("Connected SoftAP Clients: ");
+            Serial.println(currentClientCount);
+            _clientCount = currentClientCount;
+        }
+    }
+}
+
+// Helper function to return boolean value whether softAP is on or not
+bool WiFiManager::IsAPOn() {
+    if(softAPIP() != IPAddress(0, 0, 0, 0)) {
+        return true;
+    } else {
+        return false;
     }
 }
