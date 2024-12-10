@@ -1,15 +1,20 @@
 #include <Arduino.h>
+#include <WiFiManager.h>
+#include <secrets.h>
 
-// put function declarations here:
-int myFunction(int, int);
+WiFiManager wm;
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+
+  // Open the serial port
+  Serial.begin(9600);
+
+  // Connect to WiFi with ssid and credentials
+  wm.Connect(ssid, pw);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+
 }
 
 // put function definitions here:
