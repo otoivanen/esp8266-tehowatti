@@ -1,8 +1,8 @@
 #include "WiFiManager.h"
 
 const int MAX_ATTEMPTS = 10;                // The number of max consecutive wifi connection attempts
-const int DELAY_ATTEMPT = 1000;             // Delay between connection attempts
-const long CLIENT_COUNT_INTERVAL = 1000;    // Interval between checking softAP client counts
+const int DELAY_ATTEMPT = 5000;             // Delay between connection attempts
+const long CLIENT_COUNT_INTERVAL = 000;    // Interval between checking softAP client counts
 
 // Accesspoint constants
 const char* AP_SSID = "TehoWatti";
@@ -28,6 +28,7 @@ void WiFiManager::Connect(const char* ssid, const char* password) {
 
     if (status() == WL_CONNECTED) {
         Serial.println("WiFi connection established");
+        Serial.println(localIP());
     } else {
         Serial.println("WiFi connection failed. Starting access point...");
 
