@@ -8,11 +8,11 @@ class WiFiManager : public ESP8266WiFiClass {
 
 public:
     WiFiManager();
-    void Connect(const char* ssid, const char* password);
-    void Disconnect();
-    void PrintStatus();
-    void CheckAPClientCount(); // Checks the softAP clientcount
-    bool IsAPOn(); // Helper method to return boolean value if softAP is active
+    void connect(const char* ssid, const char* password);
+    void disconnect();
+    void printStatus();
+    void checkAPClientCount(); // Checks the softAP clientcount
+    bool isAPOn(); // Helper method to return boolean value if softAP is active
 
 private:
     // variables for the clientcount softAP clientcount

@@ -117,22 +117,47 @@ const char* index_html = R"rawliteral(
       <label for="mqttRelay">MQTT Topic for Relay Control</label>
       <input type="text" id="mqttRelay" name="mqttRelay" placeholder="e.g., relay/control" required>
 
-      <button type="submit">Save Settings</button>
+      <button type="button" id="saveButton">Save Settings</button>
     </form>
     <div class="footer">© 2024 Jäspi TehoWatti Online</div>
   </div>
 
   <script>
-    document.getElementById('settingsForm').addEventListener('submit', function(event) {
+    // Save Settings button event listener
+    document.getElementById('saveButton').addEventListener('click', async function(event) {
       event.preventDefault(); // Prevent form submission
 
-      const currentBaseUrl = window.location.href // Capture the current baseurl of UI
+      // Generate url for the http request
+      const saveSettingsEndpoint = "http://192.168.1.177"//window.location.host;
+      const endpoint = "savesettings";
+      const separator = saveSettingsEndpoint.endsWith('/') ? '' : '/';
+      const fullUrl = saveSettingsEndpoint + separator + endpoint;
 
-      const formData = new FormData(this);
+      console.log(fullUrl);
+
+      // Generate form object
+      const form = document.getElementById('settingsForm');
+      const formData = new FormData(form);
       const settings = Object.fromEntries(formData.entries());
       console.log('Settings:', settings);
-      alert('Settings Saved!')
-      console.log(currentBaseUrl);
+
+      try {
+        const response = await fetch(fullUrl, {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(settings)
+        });
+
+        if (!response.ok) {
+          console.log("Http request failed");
+        } else {
+          console.log(await response.json());
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
     });
   </script>
 </body>

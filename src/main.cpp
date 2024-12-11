@@ -2,26 +2,25 @@
 #include <WiFiManager.h>
 #include <WebServerManager.h>
 #include <secrets.h>
+#include <FileManager.h>
 
-WiFiManager wm;         // Create WiFiManager object to control WiFi functionalities
-WebServerManager server(80);   // Create WebServerManager object to control the webserver functionalities
+FileManager fm; // Initialize the filemanager
+WiFiManager wm; // Initialize WiFiManager object to control WiFi functionalities
+WebServerManager server(80, fm); // Initialize WebServerManager object to control the webserver functionalities, pass filemanager reference to operate files from webserver class
 
 void setup() {
 
   Serial.begin(9600); // Open the serial port
 
-  wm.Connect(ssid, pw); // Connect to WiFi with ssid and credentials
+  wm.connect(ssid, pw); // Connect to WiFi with ssid and credentials
 
   server.begin(); // Start the web server
   Serial.println("Web server started");
+
+
 }
 
 void loop() {
   server.handleClient(); // Handle the webserver client requests
-  wm.CheckAPClientCount(); // Check nbr of softap clients if established. Non-blocking function.
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+  wm.checkAPClientCount(); // Check nbr of softap clients if established. Non-blocking function.
 }

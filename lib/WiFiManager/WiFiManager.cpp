@@ -13,7 +13,7 @@ WiFiManager::WiFiManager () {
 }
 
 // Attempts to connect to given SSID, if fails, starts softAP to enable connectivity
-void WiFiManager::Connect(const char* ssid, const char* password) {
+void WiFiManager::connect(const char* ssid, const char* password) {
 
     begin(ssid, password);
 
@@ -44,13 +44,13 @@ void WiFiManager::Connect(const char* ssid, const char* password) {
 }
 
 // Disconnect from WiFi
-void WiFiManager::Disconnect() {
+void WiFiManager::disconnect() {
     disconnect();
     Serial.println("Disconnected from WiFi");
 }
 
 // Print SSID and IP-address if connected
-void WiFiManager::PrintStatus() {
+void WiFiManager::printStatus() {
     if (status() == WL_CONNECTED) {
         Serial.print("Connected to: ");
         Serial.println(SSID());
@@ -62,10 +62,10 @@ void WiFiManager::PrintStatus() {
 }
 
 // Check the number of connected softAP clients in specified interval and report to Serial if changes
-void WiFiManager::CheckAPClientCount() {
+void WiFiManager::checkAPClientCount() {
 
     // Run only if softAP is on and interval has passed
-    if (IsAPOn() && millis() - _clientCountLastCheckMillis > CLIENT_COUNT_INTERVAL) {
+    if (isAPOn() && millis() - _clientCountLastCheckMillis > CLIENT_COUNT_INTERVAL) {
         _clientCountLastCheckMillis = millis(); // set the timestamp for last check
         
         int currentClientCount = softAPgetStationNum();
@@ -79,7 +79,7 @@ void WiFiManager::CheckAPClientCount() {
 }
 
 // Helper function to return boolean value whether softAP is on or not
-bool WiFiManager::IsAPOn() {
+bool WiFiManager::isAPOn() {
     if(softAPIP() != IPAddress(0, 0, 0, 0)) {
         return true;
     } else {
