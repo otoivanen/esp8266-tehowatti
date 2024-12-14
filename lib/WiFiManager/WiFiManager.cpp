@@ -1,11 +1,9 @@
 #include "WiFiManager.h"
 
-const int MAX_ATTEMPTS = 10;                // The number of max consecutive wifi connection attempts
-const int DELAY_ATTEMPT = 5000;             // Delay between connection attempts
-const long CLIENT_COUNT_INTERVAL = 000;    // Interval between checking softAP client counts
-
-// Accesspoint constants
-const char* AP_SSID = "TehoWatti";
+const int MAX_ATTEMPTS = 10; // The number of max consecutive wifi connection attempts
+const int DELAY_ATTEMPT = 5000; // Delay between connection attempts ms
+const char* AP_SSID = "TehoWatti"; // Name of the softAP
+const long CLIENT_COUNT_INTERVAL = 1000; // Interval between checking softAP client counts ms
 
 // Constructor
 WiFiManager::WiFiManager () {
@@ -14,6 +12,8 @@ WiFiManager::WiFiManager () {
 
 // Attempts to connect to given SSID, if fails, starts softAP to enable connectivity
 void WiFiManager::connect(const char* ssid, const char* password) {
+
+    Serial.println("Attempting to establish WiFi connection");
 
     begin(ssid, password);
 

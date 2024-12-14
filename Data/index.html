@@ -1,7 +1,3 @@
-#ifndef INDEX_HTML_H
-#define INDEX_HTML_H
-
-const char* index_html = R"rawliteral(
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -91,6 +87,7 @@ const char* index_html = R"rawliteral(
       }
     }
   </style>
+  <script src="/javascript" defer> </script>
 </head>
 <body>
   <div class="container">
@@ -121,47 +118,5 @@ const char* index_html = R"rawliteral(
     </form>
     <div class="footer">© 2024 Jäspi TehoWatti Online</div>
   </div>
-
-  <script>
-    // Save Settings button event listener
-    document.getElementById('saveButton').addEventListener('click', async function(event) {
-      event.preventDefault(); // Prevent form submission
-
-      // Generate url for the http request
-      const saveSettingsEndpoint = "http://192.168.1.177"//window.location.host;
-      const endpoint = "savesettings";
-      const separator = saveSettingsEndpoint.endsWith('/') ? '' : '/';
-      const fullUrl = saveSettingsEndpoint + separator + endpoint;
-
-      console.log(fullUrl);
-
-      // Generate form object
-      const form = document.getElementById('settingsForm');
-      const formData = new FormData(form);
-      const settings = Object.fromEntries(formData.entries());
-      console.log('Settings:', settings);
-
-      try {
-        const response = await fetch(fullUrl, {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(settings)
-        });
-
-        if (!response.ok) {
-          console.log("Http request failed");
-        } else {
-          console.log(await response.json());
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    });
-  </script>
 </body>
 </html>
-)rawliteral";
-
-#endif

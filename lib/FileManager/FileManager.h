@@ -9,7 +9,7 @@ class FileManager {
 public:
     FileManager();
     bool begin();
-    void saveFile(const char* filename, const String &data); // Save the data to file
+    bool saveFile(const char* filename, const String &data); // Save the data to file
     String readFile(const char* filename); // Read file and return String
 };
 
