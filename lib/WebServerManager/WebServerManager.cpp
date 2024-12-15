@@ -5,14 +5,13 @@ const char* EXPECTED_CONFIG_KEYS[] = {"ssid", "password", "mqttBroker", "mqttPor
 // Constructor calls the base class constructor and takes the port and reference to filemanager as reference. Fm can then be used to store and retrieve config values.
 WebServerManager::WebServerManager(uint16_t port, FileManager &fm) : ESP8266WebServer(port) {
 
-    Serial.println("WebServer started!");
-
     // The root route. Need to capture 'this' to be able to access a method of parent class from lambda
     on("/", HTTP_GET, [this, &fm]() {
         String html = fm.readFile("/index.html");
         send(200, "text/html", html); // Send the config page as response
     });
 
+    // Serve javascript file from SPIFFS
     on("/javascript", HTTP_GET, [this, &fm]() {
         String javascript = fm.readFile("/javascript.js");
         send(200, "text/html", javascript);
@@ -65,7 +64,15 @@ WebServerManager::WebServerManager(uint16_t port, FileManager &fm) : ESP8266WebS
         } else {
             send(400, "text/plain", "No config received!");
         }
-
-
     });
+};
+
+String validateConfig(JsonDocument &config) {
+    JsonObject obj = config.as<JsonObject>();
+
+    for (JsonPair kv : obj) {
+        Serial.println("Do this later");
+    }
+
+    return "";
 };

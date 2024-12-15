@@ -12,7 +12,7 @@ public:
     // Constructor will call the ESP8266WebServer constructor and requires a port
     WebServerManager(uint16_t port, FileManager &fm);
 private:
-    String validateConfig(JsonDocument config);
+    String validateConfig(JsonDocument &config);
 };
 
 #endif
