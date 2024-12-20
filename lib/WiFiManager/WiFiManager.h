@@ -17,7 +17,7 @@ public:
 private:
     // variables for the clientcount softAP clientcount
     int _clientCount = 0;                                   // nbr of softAP clients
-    unsigned long _clientCountLastCheckMillis = millis();   // when it was last time checked
+    unsigned long _clientCountLastCheckMillis = millis();   // when clientcount was last time checked
 };
 
 #endif

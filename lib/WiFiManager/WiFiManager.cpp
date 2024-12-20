@@ -10,12 +10,22 @@ WiFiManager::WiFiManager () {
     
 }
 
-// Attempts to connect to given SSID, if fails, starts softAP to enable connectivity
+/*
+Establish WiFi connection. If succesful, set autoReconnect in case of connection failure when program is running.
+If initial connection fails, and AP start given as parameter, will start softAP. Without startAP = true works as
+for reconnecting without starting AP.
+
+Params:
+    - const char* ssid - WiFi SSID
+    - const char* password - WiFi password
+    - bool startAP - whether to start softAP if connection fails
+*/
 void WiFiManager::connect(const char* ssid, const char* password) {
 
     Serial.println("Attempting to establish WiFi connection");
 
     begin(ssid, password);
+    
 
     int attempt = 1;
 
@@ -56,8 +66,10 @@ void WiFiManager::printStatus() {
         Serial.println(SSID());
         Serial.print("IP Address: ");
         Serial.println(localIP());
+    } else if (isAPOn()) {
+        Serial.println("Soft Access Point started");
     } else {
-        Serial.println("Not connected to any WiFi.");
+        Serial.println("Not connected to WiFi and AP not running");
     }
 }
 

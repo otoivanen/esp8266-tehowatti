@@ -3,11 +3,16 @@
 const char* EXPECTED_CONFIG_KEYS[] = {"ssid", "password", "mqttBroker", "mqttPort", "mqttTopic1", "mqttTopic2", "mqttRelay"};
 
 // Constructor calls the base class constructor and takes the port and reference to filemanager as reference. Fm can then be used to store and retrieve config values.
-WebServerManager::WebServerManager(uint16_t port, FileManager &fm) : ESP8266WebServer(port) {
+WebServerManager::WebServerManager(uint16_t port, FileManager &fm, DallasTemperature &tempSensors) : ESP8266WebServer(port) {
 
     // The root route. Need to capture 'this' to be able to access a method of parent class from lambda
-    on("/", HTTP_GET, [this, &fm]() {
+    on("/", HTTP_GET, [this, &fm, &tempSensors]() {
         String html = fm.readFile("/index.html");
+
+        // Testing to print out realtime sensor value from main program
+        Serial.print("Sensor1 value: ");
+        Serial.println(tempSensors.getTempCByIndex(0));
+
         send(200, "text/html", html); // Send the config page as response
     });
 
@@ -67,7 +72,7 @@ WebServerManager::WebServerManager(uint16_t port, FileManager &fm) : ESP8266WebS
     });
 };
 
-String validateConfig(JsonDocument &config) {
+String WebServerManager::validateConfig(JsonDocument &config) {
     JsonObject obj = config.as<JsonObject>();
 
     for (JsonPair kv : obj) {
