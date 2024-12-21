@@ -20,11 +20,11 @@ Params:
     - const char* password - WiFi password
     - bool startAP - whether to start softAP if connection fails
 */
-void WiFiManager::connect(const char* ssid, const char* password) {
+void WiFiManager::connect() {
 
     Serial.println("Attempting to establish WiFi connection");
 
-    begin(ssid, password);
+    begin(_ssid, _password);
     
 
     int attempt = 1;
@@ -97,4 +97,10 @@ bool WiFiManager::isAPOn() {
     } else {
         return false;
     }
+}
+
+// Getters and setters
+void WiFiManager::setCredentials(const char* ssid, const char* password) {
+    _ssid = ssid;
+    _password = password;
 }

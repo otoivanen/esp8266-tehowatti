@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
     if (!response.ok) {
       console.log("Http request failed:", response.status);
-      return;
     }
         
     const textResponse = await response.text();

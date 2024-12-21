@@ -99,20 +99,29 @@
       <label for="password">WiFi Password</label>
       <input type="password" id="password" name="password" placeholder="Enter WiFi Password" required>
 
-      <label for="mqttBroker">MQTT Broker Address</label>
-      <input type="text" id="mqttBroker" name="mqttBroker" placeholder="e.g., 192.168.1.100" required>
+      <label for="mqttServer">MQTT Broker Address</label>
+      <input type="text" id="mqttServer" name="mqttServer" placeholder="e.g., 192.168.1.100" required>
 
       <label for="mqttPort">MQTT Broker Port</label>
       <input type="number" id="mqttPort" name="mqttPort" placeholder="e.g., 1883" required>
 
-      <label for="mqttTopic1">MQTT Topic for Sensor 1</label>
-      <input type="text" id="mqttTopic1" name="mqttTopic1" placeholder="e.g., sensor1/temp" required>
+      <label for="mqttUser">MQTT User</label>
+      <input type="text" id="mqttUser" name="mqttUser" placeholder="Enter MQTT Username" required>
 
-      <label for="mqttTopic2">MQTT Topic for Sensor 2</label>
-      <input type="text" id="mqttTopic2" name="mqttTopic2" placeholder="e.g., sensor2/temp" required>
+      <label for="mqttPassword">MQTT Password</label>
+      <input type="mqttPassword" id="mqttPassword" name="mqttPassword" placeholder="Enter MQTT Password" required>
 
-      <label for="mqttRelay">MQTT Topic for Relay Control</label>
-      <input type="text" id="mqttRelay" name="mqttRelay" placeholder="e.g., relay/control" required>
+      <label for="inletTempStateTopic">MQTT Inlet temperature state topic</label>
+      <input type="text" id="inletTempStateTopic" name="inletTempStateTopic" placeholder="e.g., ha/sensor1/temp" required>
+
+      <label for="outletTempStateTopic">MQTT Outlet temperature state topic</label>
+      <input type="text" id="outletTempStateTopic" name="outletTempStateTopic" placeholder="e.g., ha/sensor2/temp" required>
+
+      <label for="relayStateTopic">MQTT relay state topic</label>
+      <input type="text" id="relayStateTopic" name="relayStateTopic" placeholder="e.g., relay/state" required>
+
+      <label for="relaySetTopic">MQTT relay set topic</label>
+      <input type="text" id="relaySetTopic" name="relaySetTopic" placeholder="e.g., relay/set" required>
 
       <button type="button" id="saveButton">Save Settings</button>
     </form>
