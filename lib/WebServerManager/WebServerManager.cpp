@@ -7,15 +7,31 @@ WebServerManager::WebServerManager(uint16_t port, FileManager &fm, ConfigManager
 
     // The root route. Need to capture 'this' to be able to access a method of parent class from lambda
     on("/", HTTP_GET, [this, &fm]() {
-        String html = fm.readFile("/index.html");
+        // String html = fm.readFile("/index.html");
 
-        send(200, "text/html", html); // Send the config page as response
+        // send(200, "text/html", html); // Send the config page as response
+
+        File file = LittleFS.open("/index.html", "r");
+        if (!file) {
+            send(500, "text/plain", "Failed to load index.html");
+        }
+
+        size_t sent = streamFile(file, "text/html");
+        file.close();
     });
 
     // Serve javascript file from SPIFFS
     on("/javascript", HTTP_GET, [this, &fm]() {
-        String javascript = fm.readFile("/javascript.js");
-        send(200, "text/html", javascript);
+        // String javascript = fm.readFile("/javascript.js");
+        // send(200, "text/html", javascript);
+
+        File file = LittleFS.open("/javascript.js", "r");
+        if (!file) {
+            send(500, "text/plain", "Failed to load index.html");
+        }
+
+        size_t sent = streamFile(file, "text/html");
+        file.close();
     });
 
     // CORS DEBUGGING PURPOSES
