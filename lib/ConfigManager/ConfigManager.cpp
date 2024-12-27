@@ -72,7 +72,7 @@ PARAMS
 RETURN
     - boolean
 */
-bool ConfigManager::validateLength(const char* data, unsigned long targetSize) {
+bool ConfigManager::_validateLength(const char* data, unsigned long targetSize) {
     if (strlen(data) == 0 || strlen(data) > targetSize) {
         return false;
     } 
@@ -98,7 +98,7 @@ const char* ConfigManager::getSSID() {
 }
 
 bool ConfigManager::setSSID(const char* ssid) {
-    if(!validateLength(ssid, sizeof(_SSID))) {
+    if(!_validateLength(ssid, sizeof(_SSID))) {
         return false;
     };
 
@@ -113,7 +113,7 @@ const char* ConfigManager::getWiFiPassword() {
 }
 
 bool ConfigManager::setWiFiPassword(const char* password) {
-    if(!validateLength(password, sizeof(_wifiPassword))) {
+    if(!_validateLength(password, sizeof(_wifiPassword))) {
         return false;
     };
 
@@ -157,7 +157,7 @@ const char* ConfigManager::getMqttUser() {
 }
 
 bool ConfigManager::setMqttUser(const char* mqttUser) {
-    if(!validateLength(mqttUser, sizeof(_mqttUser))) {
+    if(!_validateLength(mqttUser, sizeof(_mqttUser))) {
         return false;
     };
 
@@ -172,7 +172,7 @@ const char* ConfigManager::getMqttPassword() {
 }
 
 bool ConfigManager::setMqttPassword(const char* mqttPassword) {
-    if(!validateLength(mqttPassword, sizeof(_mqttPassword))) {
+    if(!_validateLength(mqttPassword, sizeof(_mqttPassword))) {
         return false;
     };
 
@@ -187,7 +187,7 @@ const char* ConfigManager::getInletTempStateTopic() {
 }
 
 bool ConfigManager::setInletTempStateTopic(const char* inletStateTopic) {
-    if(!validateLength(inletStateTopic, sizeof(_inletTempStateTopic))) {
+    if(!_validateLength(inletStateTopic, sizeof(_inletTempStateTopic))) {
         return false;
     };
 
@@ -202,7 +202,7 @@ const char* ConfigManager::getOutletTempStateTopic() {
 }
 
 bool ConfigManager::setOutletTempStateTopic(const char* outletStateTopic) {
-    if(!validateLength(outletStateTopic, sizeof(_outletTempStateTopic))) {
+    if(!_validateLength(outletStateTopic, sizeof(_outletTempStateTopic))) {
         return false;
     };
 
@@ -217,7 +217,7 @@ const char* ConfigManager::getRelayStateTopic() {
 }
 
 bool ConfigManager::setRelayStateTopic(const char* relayStateTopic) {
-    if(!validateLength(relayStateTopic, sizeof(_relayStateTopic))) {
+    if(!_validateLength(relayStateTopic, sizeof(_relayStateTopic))) {
         return false;
     };
 
@@ -232,7 +232,7 @@ const char* ConfigManager::getRelaySetTopic() {
 }
 
 bool ConfigManager::setRelaySetTopic(const char* relaySetTopic) {
-    if(!validateLength(relaySetTopic, sizeof(_relaySetTopic))) {
+    if(!_validateLength(relaySetTopic, sizeof(_relaySetTopic))) {
         return false;
     };
 

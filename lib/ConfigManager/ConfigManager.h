@@ -56,7 +56,7 @@ class ConfigManager {
         char _relaySetTopic[64] = "";
 
         // Validate lenght for strings in setters
-        bool validateLength(const char* data, unsigned long target);
+        bool _validateLength(const char* data, unsigned long target);
 };
 
 #endif

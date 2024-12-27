@@ -9,6 +9,7 @@
 #include <ConfigManager.h>
 
 const int ONE_WIRE_PIN = 4; // Pin where onewire sensors are connected
+const char* DEVICE_NAME = "TehoWatti";
 
 FileManager fm; // Filemanager object for reading & writing to files
 WiFiManager wm; // WiFiManager object to control WiFi connectivity
@@ -16,7 +17,7 @@ WiFiClient wiFiClient; // Initialize separate WiFi Client to interact with mqtt 
 PubSubClient mqttClient(wiFiClient); // Mqtt client for mqtt messaging
 SensorManager sensors(ONE_WIRE_PIN); // Initialize the sensor manager
 ConfigManager config(fm);
-WebServerManager server(80, fm, config); // Webserver to run on port 80 for http connections
+WebServerManager server(80, config); // Webserver to run on port 80 for http connections
 
 // Declare function prototypes here to place them below loop () for better readability
 void connectMqtt();
@@ -26,15 +27,20 @@ void setup() {
   Serial.begin(9600); // Open the serial port
   fm.begin(); // Initialize the FS
   config.loadConfig(); // Load all configs from file
-  wm.setCredentials(config.getSSID(), config.getWiFiPassword());
-  //wm.setCredentials(ssid, pw);
-  wm.connect(); // Connect to WiFi with ssid and credentials
+
+  wm.setCredentials(config.getSSID(), config.getWiFiPassword(), DEVICE_NAME);
+  if(!wm.connect()) {
+    wm.startSoftAP();
+  }
+
   server.begin(); // Start the web server
   mqttClient.setServer(config.getMqttServer(), config.getMqttPort());
   connectMqtt();
 }
 
 void loop() {
+  wm.checkWiFiStatus(); // Ensure wifi is connected, if not start softAP for a period of time before reconnecting
+
   if (!mqttClient.connected()) {
     //connectMqtt();
   }

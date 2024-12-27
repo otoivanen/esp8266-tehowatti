@@ -10,7 +10,10 @@ class WebServerManager : public ESP8266WebServer {
 
 public:
     // Constructor will call the ESP8266WebServer constructor and requires a port
-    WebServerManager(uint16_t port, FileManager &fm, ConfigManager &config);
+    WebServerManager(uint16_t port, ConfigManager &config);
+
+private:
+    void _streamFile(const char * path);
 };
 
 #endif
