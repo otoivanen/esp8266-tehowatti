@@ -66,7 +66,7 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config) : ESP82
             // Send OK response
             send(200, "text/html", "Settings saved succesfully, device will reboot in 1sec");
             delay(1000);
-            //ESP.restart();
+            ESP.restart();
 
         } else {
             send(400, "text/plain", "No config received!");

@@ -19,8 +19,6 @@ private:
     OneWire _oneWire;
     DallasTemperature _sensors;
 
-    unsigned long _lastRead = millis(); // Last reading event
-
     // Store the correct sensor addresses
     DeviceAddress _inletSensorAddress;
     DeviceAddress _outletSensorAddress;
