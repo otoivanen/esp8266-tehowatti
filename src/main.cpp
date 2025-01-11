@@ -8,7 +8,7 @@
 #include <SensorManager.h>
 #include <ConfigManager.h>
 
-const int ONE_WIRE_PIN = 4; // Pin where onewire sensors are connected
+const int ONE_WIRE_PIN = 16; // Pin where onewire sensors are connected
 const char* DEVICE_NAME = "TehoWatti";
 unsigned long MQTT_RECONNECT_INTERVAL = 10000;
 unsigned long SENSOR_VALUE_MIN_PUBLISH_INTERVAL = 5000;
@@ -40,6 +40,7 @@ void setup() {
 
   server.begin(); // Start the web server
   mqttClient.setServer(config.getMqttServer(), config.getMqttPort());
+  mqttClient.setKeepAlive(60);
   connectMqtt();
 }
 
@@ -94,6 +95,8 @@ void publishSensorValues() {
   static unsigned long lastInletTempPublish = 0; // static will retain the value from last execution
   static unsigned long lastOutletTempPublish = 0;
 
+  char buffer[16]; // Shared buffer for publishing
+
   float inletTemp = sensors.getInletTemp();
   static float lastInletTemp = 0;
   float outletTemp = sensors.getOutletTemp();
@@ -101,7 +104,8 @@ void publishSensorValues() {
 
   // Publish inletTemp
   if(isPublishAllowed(lastInletTempPublish, lastInletTemp, inletTemp)) {
-    mqttClient.publish(config.getInletTempStateTopic(), String(inletTemp).c_str());
+    dtostrf(inletTemp, 6, 2, buffer); // Convert float to string
+    mqttClient.publish(config.getInletTempStateTopic(), buffer);
     Serial.print("Inlet temperature published: ");
     Serial.println(inletTemp);
     lastInletTempPublish = millis();
@@ -110,7 +114,8 @@ void publishSensorValues() {
 
   // Publish outletTemp
   if(isPublishAllowed(lastOutletTempPublish, lastOutletTemp, outletTemp)) {
-    mqttClient.publish(config.getOutletTempStateTopic(), String(outletTemp).c_str());
+    dtostrf(outletTemp, 6, 2, buffer); // Convert float to string
+    mqttClient.publish(config.getOutletTempStateTopic(), buffer);
     Serial.print("Outlet temperature published: ");
     Serial.println(outletTemp);
     lastOutletTempPublish = millis();
