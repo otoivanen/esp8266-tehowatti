@@ -7,12 +7,19 @@
 #include <PubSubClient.h>
 #include <SensorManager.h>
 #include <ConfigManager.h>
+#include <Adafruit_SSD1306.h>
+#include <Wire.h>
+#include <Adafruit_NeoPixel.h>
 
 const int ONE_WIRE_PIN = 16; // Pin where onewire sensors are connected
 const char* DEVICE_NAME = "TehoWatti";
 unsigned long MQTT_RECONNECT_INTERVAL = 10000;
 unsigned long SENSOR_VALUE_MIN_PUBLISH_INTERVAL = 5000;
 unsigned long SENSOR_VALUE_MAX_PUBLISH_INTERVAL = 300000; // Publish sensor values every 5 mins minimum
+
+// Test display and led
+Adafruit_SSD1306 display(128, 64, &Wire, -1);
+Adafruit_NeoPixel led(1, 15, NEO_GRB + NEO_KHZ800);
 
 FileManager fm; // Filemanager object for reading & writing to files
 WiFiManager wm; // WiFiManager object to control WiFi connectivity
@@ -29,6 +36,14 @@ void publishSensorValues();
 
 void setup() {
 
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.display();
+  delay(2000);
+  led.begin();
+  led.setPixelColor(0, led.Color(255, 255, 0));
+  led.setBrightness(10);
+  led.show();
+
   Serial.begin(9600); // Open the serial port
   fm.begin(); // Initialize the FS
   config.loadConfig(); // Load all configs from file
@@ -42,6 +57,11 @@ void setup() {
   mqttClient.setServer(config.getMqttServer(), config.getMqttPort());
   mqttClient.setKeepAlive(60);
   connectMqtt();
+
+  // Initial test for relay, remove once logic is done
+  int relaypin = 14;
+  pinMode(relaypin, OUTPUT);
+  digitalWrite(relaypin, LOW);
 }
 
 void loop() {
