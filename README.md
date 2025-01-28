@@ -34,6 +34,30 @@ This is just an example of the bill of materials for the project. With small cha
 - Dupont wires
 - Preferably Home Assistant or similar homeautomation system
 
-### Case
+## Case
 The case has been designed with SolidWorks and needed STL & 3MF files are published in MakerWorld community
 [Wemos D1 Mini project enclosure](https://makerworld.com/en/models/946838#profileId-913814)
+
+# TO-DO
+- Controllability
+    - Implement relay class
+    - Implement relay control through mqtt
+    - Implement relay control through web ui
+- Status indication
+    - Implement sensor values & WiFi status to OLED display
+    - Implement logics for status LED controlling
+- Configuration
+    - Implement assigning scanned sensor adresses into inlet/outlet temps via web UI
+- Documentation
+    - Draw wiring schema for device & boiler
+
+# Images
+##
+![case](./projectresources/case.png)
+
+## Configuration UI runnin on AP or WLAN to store settings
+![configurationui](./projectresources/config_ui.png)
+
+## Home assistant integration
+![ha1](./projectresources/ha1.png)
+![ha2](./projectresources/ha2.png)
