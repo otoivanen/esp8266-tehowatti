@@ -72,6 +72,28 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config) : ESP82
             send(400, "text/plain", "No config received!");
         }
     });
+
+    /*
+    Route for actuating the Relay and updating related states via Web UI by receiving ON/OFF commands as query parameters
+    */
+   on("/relay", HTTP_GET, [this]() {
+    if(hasArg("state")) {
+        String state = arg("state"); // Store the state value from query params
+        
+        Serial.print("Received relay state request from WebUI: ");
+        Serial.println(state);
+
+        if (state == "ON") {
+            setRelayState(true);
+        } else if (state == "OFF") {
+            setRelayState(false);
+        }
+
+        send(200, "text/html", "Relay state updated");
+    } else {
+        send(400, "text/html", "Missing 'state' parameter'");
+    }
+   });
 }
 
 void WebServerManager::_streamFile(const char* path) {

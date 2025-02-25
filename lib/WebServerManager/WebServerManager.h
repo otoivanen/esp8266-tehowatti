@@ -4,6 +4,7 @@
 #include <ESP8266WebServer.h>
 #include <ConfigManager.h>
 #include <ArduinoJson.h>
+#include <Global_functions.h>
 
 // Inherit the default Arduino WiFiClass and create custom methods to streamline operation
 class WebServerManager : public ESP8266WebServer {
