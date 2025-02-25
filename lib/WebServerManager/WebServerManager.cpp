@@ -1,19 +1,27 @@
 #include <WebServerManager.h>
 
-// Constructor calls the base class constructor and takes the port and reference to filemanager as reference.
-WebServerManager::WebServerManager(uint16_t port, ConfigManager &config) : ESP8266WebServer(port) {
+/*
+Constructor calls the base class constructor and takes the port and reference to filemanager, sensors and relay for accessing the other classes states.
+*/
+WebServerManager::WebServerManager(uint16_t port, ConfigManager &config, SensorManager &sensors, Relay &relay) : ESP8266WebServer(port) {
 
-    // The root route. Need to capture 'this' to be able to access a method of parent class from lambda
+    /*
+    Serve the root route html from SPIFFS memory
+    */
     on("/", HTTP_GET, [this]() {
         _streamFile("/index.html");
     });
 
-    // Serve javascript file from SPIFFS
+    /*
+    Serve the javascript file as stream from SPIFFS memory
+    */
     on("/javascript", HTTP_GET, [this]() {
         _streamFile("/javascript.js");
     });
 
-    // CORS DEBUGGING PURPOSES
+    /*
+    Set CORS -options for savesettings route, needed while debugging to if making requests from different host than device itself
+    */
     on("/savesettings", HTTP_OPTIONS, [this]() {
         sendHeader("Access-Control-Allow-Origin", "*");
         sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -22,8 +30,8 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config) : ESP82
     });
 
     /*
-    Route handles http request when config form is submitted. The received config is lightly validated. If invalid, error respose sent,
-    if valid, config is saved to file.
+    Route handles http request when config form is submitted. The received config is lightly validated with configmanager's setters. 
+    If invalid, error respose sent, if valid, config is saved to file.
     */
     on("/savesettings", HTTP_POST, [this, &config]() {
 
@@ -74,9 +82,10 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config) : ESP82
     });
 
     /*
-    Route for actuating the Relay and updating related states via Web UI by receiving ON/OFF commands as query parameters
+    Route for actuating the Relay and updating related states via Web UI by receiving ON/OFF commands as query parameters.
+    If no parameters are given the current relay state is returned.
     */
-   on("/relay", HTTP_GET, [this]() {
+   on("/relay", HTTP_GET, [this, &relay]() {
     if(hasArg("state")) {
         String state = arg("state"); // Store the state value from query params
         
@@ -91,11 +100,15 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config) : ESP82
 
         send(200, "text/html", "Relay state updated");
     } else {
-        send(400, "text/html", "Missing 'state' parameter'");
+        send(200, "text/html", relay.getState());
     }
    });
 }
 
+/*
+Private method to stream files from SPIFFS memory. Streaming is crucial here, not to load whole file into RAM 
+but instead sending it bit by bit
+*/
 void WebServerManager::_streamFile(const char* path) {
     File file = LittleFS.open(path, "r");
         if (!file) {

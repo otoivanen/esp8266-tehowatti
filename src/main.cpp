@@ -7,11 +7,12 @@
 #include <PubSubClient.h>
 #include <SensorManager.h>
 #include <ConfigManager.h>
-#include <Adafruit_SSD1306.h>
+//#include <Adafruit_SSD1306.h>
 #include <Wire.h>
 #include <Adafruit_NeoPixel.h>
 #include <Relay.h>
 #include <Global_functions.h>
+#include <OLEDManager.h>
 
 const int ONE_WIRE_PIN = 16; // Pin where onewire sensors are connected
 const char* DEVICE_NAME = "TehoWatti";
@@ -20,8 +21,6 @@ unsigned long SENSOR_VALUE_MIN_PUBLISH_INTERVAL = 5000;
 unsigned long SENSOR_VALUE_MAX_PUBLISH_INTERVAL = 300000; // Publish sensor values every 5 mins minimum
 unsigned long RELAY_STATE_PUBLISH_INTERVAL = 300000; // Publish relay state by force every 5 mins
 
-// Test display and led
-Adafruit_SSD1306 display(128, 64, &Wire, -1);
 Adafruit_NeoPixel led(1, 15, NEO_GRB + NEO_KHZ800);
 
 FileManager fm; // Filemanager object for reading & writing to files
@@ -30,8 +29,10 @@ WiFiClient wiFiClient; // Initialize separate WiFi Client to interact with mqtt 
 PubSubClient mqttClient(wiFiClient); // Mqtt client for mqtt messaging
 SensorManager sensors(ONE_WIRE_PIN); // Initialize the sensor manager
 ConfigManager config(fm);
-WebServerManager server(80, config); // Webserver to run on port 80 for http connections
 Relay relay(14); // Initialize relay in output pin 14
+WebServerManager server(80, config, sensors, relay); // Webserver to run on port 80 for http connections
+OLEDManager oled; // Init display object
+
 
 
 // Declare function prototypes here to place them below loop () for better readability
@@ -42,10 +43,10 @@ void callback(char* topic, byte* payload, unsigned int length);
 void publishRelayState();
 
 void setup() {
-  digitalWrite(14, HIGH); //TEST
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  display.display();
+  oled.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  oled.display();
   delay(2000);
+  oled.clearDisplay();
   led.begin();
   led.setPixelColor(0, led.Color(255, 255, 0));
   led.setBrightness(10);
@@ -81,6 +82,8 @@ void loop() {
   mqttClient.loop();        // Handle MQTT-messages
   publishSensorValues();    // Publish sensor values
   publishRelayState();      // Force publish relay state in case of unknown state
+  // Update the OLED -display rows if states have changed
+  oled.updateDisplay(sensors.getInletTemp(), sensors.getOutletTemp(), relay.getState(), wm.getIP(), wm.getMode(), mqttClient.connected());
 }
 
 /*
