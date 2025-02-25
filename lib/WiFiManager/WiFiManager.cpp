@@ -44,7 +44,7 @@ bool WiFiManager::connect() {
     } else {
         return false;
     }
-}
+};
 
 void WiFiManager::startSoftAP() {
         Serial.println("Starting WiFi accesspoint......");
@@ -58,7 +58,7 @@ void WiFiManager::startSoftAP() {
         } else {
             Serial.println("Failed to start Access Point.");
         }
-}
+};
 
 /*
 *   Check WiFi status periodically and if not connected, switch between AP mode and STA mode until connection is established
@@ -74,7 +74,7 @@ void WiFiManager::checkWiFiStatus() {
             startSoftAP();
         }
     }
-}
+};
 
 // Check the number of connected softAP clients in specified interval and report to Serial if changes
 void WiFiManager::checkAPClientCount() {
@@ -91,7 +91,7 @@ void WiFiManager::checkAPClientCount() {
             _softAPclientCount = currentClientCount;
         }
     }
-}
+};
 
 // Helper function to return boolean value whether softAP is on or not
 bool WiFiManager::isAPOn() {
@@ -100,11 +100,39 @@ bool WiFiManager::isAPOn() {
     } else {
         return false;
     }
-}
+};
+
+const char* WiFiManager::getMode() {
+    if (isAPOn()) {
+        return "AP";
+    } else {
+        return "STA";
+    }
+};
+
+const char* WiFiManager::getIP() {
+    static String ipStr; // Static variable to hold IP address as a string
+
+    IPAddress localIP = WiFi.localIP();
+    IPAddress apIP = softAPIP();
+
+    if (localIP != IPAddress(0, 0, 0, 0)) {
+        // If local IP is set, use it
+        ipStr = localIP.toString();
+    } else if (apIP != IPAddress(0, 0, 0, 0)) {
+        // If AP IP is set, use it
+        ipStr = apIP.toString();
+    } else {
+        // If neither IP is set, return a default message
+        ipStr = "(ip unset)";
+    }
+
+    return ipStr.c_str(); // Return the IP as const char* from stored string
+};
 
 // Getters and setters
 void WiFiManager::setCredentials(const char* ssid, const char* password, const char* deviceName) {
     _ssid = ssid;
     _password = password;
     _deviceName = deviceName;
-}
+};

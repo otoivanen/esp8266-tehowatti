@@ -14,6 +14,8 @@ public:
     void checkAPClientCount(); // Checks the softAP clientcount
     bool isAPOn(); // Helper method to return boolean value if softAP is active
     void setCredentials(const char* ssid, const char* password, const char* deviceName);
+    const char* getIP(); // Returns ip address regardless of operating mode
+    const char* getMode(); // Returns STA/AP mode
 
 private:
     const char* _ssid;
