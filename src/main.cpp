@@ -7,12 +7,12 @@
 #include <PubSubClient.h>
 #include <SensorManager.h>
 #include <ConfigManager.h>
-//#include <Adafruit_SSD1306.h>
 #include <Wire.h>
 #include <Adafruit_NeoPixel.h>
 #include <Relay.h>
 #include <Global_functions.h>
 #include <OLEDManager.h>
+#include <LEDManager.h>
 
 const int ONE_WIRE_PIN = 16; // Pin where onewire sensors are connected
 const char* DEVICE_NAME = "TehoWatti";
@@ -20,8 +20,6 @@ unsigned long MQTT_RECONNECT_INTERVAL = 10000;
 unsigned long SENSOR_VALUE_MIN_PUBLISH_INTERVAL = 5000;
 unsigned long SENSOR_VALUE_MAX_PUBLISH_INTERVAL = 300000; // Publish sensor values every 5 mins minimum
 unsigned long RELAY_STATE_PUBLISH_INTERVAL = 300000; // Publish relay state by force every 5 mins
-
-Adafruit_NeoPixel led(1, 15, NEO_GRB + NEO_KHZ800);
 
 FileManager fm; // Filemanager object for reading & writing to files
 WiFiManager wm; // WiFiManager object to control WiFi connectivity
@@ -32,7 +30,7 @@ ConfigManager config(fm);
 Relay relay(14); // Initialize relay in output pin 14
 WebServerManager server(80, config, sensors, relay); // Webserver to run on port 80 for http connections
 OLEDManager oled; // Init display object
-
+LEDManager led; // Init the led control
 
 
 // Declare function prototypes here to place them below loop () for better readability
@@ -43,14 +41,13 @@ void callback(char* topic, byte* payload, unsigned int length);
 void publishRelayState();
 
 void setup() {
+  // Initialize and start the display
   oled.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  oled.display();
-  delay(2000);
   oled.clearDisplay();
-  led.begin();
-  led.setPixelColor(0, led.Color(255, 255, 0));
-  led.setBrightness(10);
-  led.show();
+
+  // Initialize and start the led operation, show alert color until fully booted
+  led.enable();
+  led.alert();
 
   Serial.begin(9600); // Open the serial port
   fm.begin(); // Initialize the FS
@@ -63,13 +60,17 @@ void setup() {
 
   server.begin(); // Start the web server
   mqttClient.setServer(config.getMqttServer(), config.getMqttPort());
-  mqttClient.setKeepAlive(60);
+  mqttClient.setKeepAlive(15);
   mqttClient.setCallback(callback); // Assign callback function to execute when MQTT-msg is received
   connectMqtt();
 }
 
 void loop() {
-  wm.checkWiFiStatus(); // Ensure wifi is connected, if not start softAP for a period of time before reconnecting
+  // Update the status led state on every cycle
+  led.setStatus(wm.isAPOn(), mqttClient.connected(), relay.getState());
+
+  // Ensure wifi is connected, if not start softAP for a period of time before reconnecting
+  wm.checkWiFiStatus(); 
 
   // Ensure mqtt broker is connected and attempt reconnect if not
   if (!mqttClient.connected()) {
@@ -82,12 +83,13 @@ void loop() {
   mqttClient.loop();        // Handle MQTT-messages
   publishSensorValues();    // Publish sensor values
   publishRelayState();      // Force publish relay state in case of unknown state
+
   // Update the OLED -display rows if states have changed
   oled.updateDisplay(sensors.getInletTemp(), sensors.getOutletTemp(), relay.getState(), wm.getIP(), wm.getMode(), mqttClient.connected());
 }
 
 /*
-Function to handle MQTT connection with restricted retry interval, and subscribe to needed topics.
+Function to handle MQTT connection with restricted retry interval, and subscribe to needed topics when connecting.
 */
 void connectMqtt() {
   static unsigned long lastConnectionAttempt = 0;
@@ -205,8 +207,10 @@ void setRelayState(bool state) {
   if (state) {
     relay.on();
     mqttClient.publish(config.getRelayStateTopic(), "ON", true);
+    led.relayActive();
   } else {
     relay.off();
     mqttClient.publish(config.getRelayStateTopic(), "OFF", true);
+    led.standby();
   } 
 }
