@@ -16,6 +16,7 @@ class OLEDManager : public Adafruit_SSD1306 {
 public:
     OLEDManager();
     void updateDisplay(float inletTemp, float outletTemp, const char* relayState, const char* ip, const char* mode, boolean mqtt);
+    void showBootMsg(const char* text);
 private:
     void _drawRow(int row, const String& text);
 };

@@ -43,7 +43,7 @@ void publishRelayState();
 void setup() {
   // Initialize and start the display
   oled.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  oled.clearDisplay();
+  oled.showBootMsg("Booting..");
 
   // Initialize and start the led operation, show alert color until fully booted
   led.enable();
@@ -54,7 +54,10 @@ void setup() {
   config.loadConfig(); // Load all configs from file
 
   wm.setCredentials(config.getSSID(), config.getWiFiPassword(), DEVICE_NAME);
+  
+  oled.showBootMsg("Trying to establish WiFi Connection");
   if(!wm.connect()) {
+    oled.showBootMsg("WiFi failed, starting AP");
     wm.startSoftAP();
   }
 
@@ -63,6 +66,9 @@ void setup() {
   mqttClient.setKeepAlive(15);
   mqttClient.setCallback(callback); // Assign callback function to execute when MQTT-msg is received
   connectMqtt();
+  
+  oled.clearDisplay();
+  oled.display();
 }
 
 void loop() {
@@ -213,4 +219,39 @@ void setRelayState(bool state) {
     mqttClient.publish(config.getRelayStateTopic(), "OFF", true);
     led.standby();
   } 
+}
+
+/*
+Global function accesible from all classess to retrieve all necessary statuses, primarily for displaying in Web UI
+*/
+/*
+Method returns full config excluding secrets as json for passing back to browser through http-request
+*/
+String getStatesAsJson() {
+  JsonDocument doc;
+
+  String currentSSID;
+
+  if (wm.getMode() == "STA") {
+    currentSSID = wm.SSID();
+  } else {
+    currentSSID = wm.softAPSSID();
+  }
+
+  // Populate JSON document with current config values
+  doc["wifiMode"] = wm.getMode();
+  doc["wifiIP"] = wm.getIP();
+  doc["SSID"] = currentSSID;
+  doc["MQTTConnected"] = mqttClient.connected();
+  doc["MQTTBroker"] = config.getMqttServer().toString();
+  doc["MQTTPort"] = config.getMqttPort();
+  doc["InletTemp"] = sensors.getInletTemp();
+  doc["OutletTemp"] = sensors.getOutletTemp();
+  doc["RelayState"] = relay.getState();
+
+  // Serialize JSON document into a string
+  String serializedStates;
+  serializeJson(doc, serializedStates);
+
+  return serializedStates;
 }

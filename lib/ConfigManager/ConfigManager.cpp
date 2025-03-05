@@ -64,6 +64,31 @@ bool ConfigManager::saveConfig() {
 }
 
 /*
+Method returns full config excluding secrets as json for passing back to browser through http-request
+*/
+String ConfigManager::getConfigAsJson() {
+    JsonDocument doc;
+
+    // Populate JSON document with current config values
+    doc["ssid"] = _SSID;
+    // doc["password"] = _wifiPassword; - Do not pass back WiFi password
+    doc["mqttServer"] = _mqttServer.toString();
+    doc["mqttPort"] = _mqttPort;
+    doc["mqttUser"] = _mqttUser;
+    // doc["mqttPassword"] = _mqttPassword; - Do not pass back Mqtt password
+    doc["inletTempStateTopic"] = _inletTempStateTopic;
+    doc["outletTempStateTopic"] = _outletTempStateTopic;
+    doc["relayStateTopic"] = _relayStateTopic;
+    doc["relaySetTopic"] = _relaySetTopic;
+
+    // Serialize JSON document into a string
+    String serializedConfig;
+    serializeJson(doc, serializedConfig);
+
+    return serializedConfig;
+}
+
+/*
 Validate lenght of char input to make sure the input is not empty and it fits into memory allocated to member variable
 
 PARAMS

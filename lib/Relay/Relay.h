@@ -9,6 +9,7 @@ public:
     Relay(int relayPin);
     void on();
     void off();
+    void toggle();
     const char* getState(); // Return the current state of relay
 private:
     int _relayPin;
