@@ -1,0 +1,47 @@
+<!-- Status Page Content -->
+
+<!-- Connection Status -->
+<div class="status-container">
+  <div class="status-section">
+    <h2>Connection Status</h2>
+    <div class="status-card">
+      <h3>WiFi Connection</h3>
+      <p>Mode: <span class="status-value" id="wifimode">Accesspoint</span></p>
+      <p>Status: <span class="status-value" id="wifistatus">Connected</span></p>
+      <p>SSID: <span class="status-value" id="ssid">DNA-WIFI-0350a</span></p>
+      <p>IP Address: <span class="status-value" id="wifiIP">192.168.1.101</span></p>
+    </div>
+    <div class="status-card">
+      <h3>MQTT Connection</h3>
+      <p>Status: <span class="status-value" id="mqttstatus">Connected</span></p>
+      <p>Broker: <span class="status-value" id="mqttIP">192.168.1.110</span></p>
+      <p>Port: <span class="status-value" id="mqttPort">1883</span></p>
+    </div>
+  </div>
+  
+  <!-- Sensor and Relay Status -->
+  <div class="status-section">
+
+    <h2>Sensor & Relay Status</h2>
+
+    <div class="status-card">
+      <h3>Inlet Temperature</h3>
+      <p class="temp-value" id="inlet">21.5°C</p>
+    </div>
+
+    <div class="status-card">
+      <h3>Outlet Temperature</h3>
+      <p class="temp-value" id="outlet">19.8°C</p>
+    </div>
+
+    <div class="status-card">
+      <h3>Relay State</h3>
+      <p>Status: <span class="status-value" id="relaystate">Active</span></p>
+      <div class="btn-container">
+        <button id="on" class="on">ON</button>
+        <button id="off" class="off">OFF</button>
+      </div>
+    </div>   
+  </div>
+  <button id="restart" class="restart">Restart device</button>
+</div>

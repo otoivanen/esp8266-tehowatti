@@ -1,42 +1,198 @@
-document.addEventListener('DOMContentLoaded', function(){ 
-// Save Settings button event listener
-  document.getElementById('saveButton').addEventListener('click', async function(event) {
-   event.preventDefault(); // Prevent form submission
+// Generate url for the http request
+//const saveSettingsEndpoint = "http://192.168.1.177"
+const host = window.location.host;
+const http = host.startsWith('http://') ? '' : 'http://';
+const separator = host.endsWith('/') ? '' : '/';
+const fullUrl = http + host + separator;
+let configJson = {}; // Initialize the configjson to populate it on first load
+let statesJson = {};
 
-  // Generate url for the http request
-  //const saveSettingsEndpoint = "http://192.168.1.177"
-  const host = window.location.host;
-  const endpoint = "savesettings";
-  const http = host.startsWith('http://') ? '' : 'http://';
-  const separator = host.endsWith('/') ? '' : '/';
-  const fullUrl = http + host + separator + endpoint;
+console.log(fullUrl);
 
-  console.log(fullUrl);
+// Executed when the DOM is first loaded. Fetch needed configs and states, and load the status fragment as default
+document.addEventListener("DOMContentLoaded", async () => {
+  configJson = await loadData(fullUrl+'settings');
+  
+  await loadPage(fullUrl+'status');
+  await populateStates();
+});
 
-  // Generate form object
-  const form = document.getElementById('settingsForm');
-  const formData = new FormData(form);
-  const settings = Object.fromEntries(formData.entries());
-  console.log('Settings:', settings);
+// Load Wifi config form
+document.getElementById("wifiConfigMenu").addEventListener('click', async () => {
+  await loadPage(fullUrl+'wificonfig');
+  await populateWifiForm();
+});
 
+// Load MQTT config page
+document.getElementById("settingsMenu").addEventListener('click', async () => {
+  await loadPage(fullUrl+'mqttconfig');
+  await populateMqttForm();
+});
+
+// Load status page
+document.getElementById("statusMenu").addEventListener('click', async () => {
+  await loadPage(fullUrl+'status');
+})
+
+// Generic function to fetch and load pages dynamically
+async function loadPage(url) {
   try {
-    const response = await fetch(fullUrl, {
-    method: "POST",
-    headers: {
-      'Content-Type': 'application/json'
-      },
-    body: JSON.stringify(settings)
-    });
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Network response was not ok');
 
-    if (!response.ok) {
-      console.log("Http request failed:", response.status);
+    const html = await response.text();
+    document.getElementById('mainContainer').innerHTML = html;
+
+    // Prepopulate values as necessary depending on which fragment was loaded
+    if (url.includes('wificonfig')) {
+      await populateWifiForm();
+    } else if (url.includes('status')) {
+      await populateStates();
     }
-        
-    const textResponse = await response.text();
-    alert(textResponse);
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error(`Error fetching ${url}:`, error);
+  }
+
+}
+
+// Generic function to fetch json data e.g. statuses and configs. Takes url as param and returns json data to caller
+async function loadData(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Network response was not ok');
+
+    const data = await response.json();
+    console.log(data);
+    return data;
+
+  } catch (error) {
+    console.error(`Error fetching ${url}:`, error);
+  }
+
+};
+
+// Add event delegation listener for elements loaded later into DOM
+document.addEventListener('click', async (event) => {
+  const buttonActions = {
+    on: { url: fullUrl+"relay?state=ON", status: "Active"},
+    off: { url: fullUrl+"relay?state=OFF", status: "Inactive" },
+    restart: { url: fullUrl+"restart" } // Different URL for restart
+  };
+
+  if (event.target && buttonActions.hasOwnProperty(event.target.id)) {
+    try {
+      const response = await fetch(buttonActions[event.target.id].url);
+      const text = await response.text();
+
+      if (response.ok) {
+        if (event.target.id == "on") {
+          document.getElementById("relaystate").innerHTML = buttonActions[event.target.id].status;
+        } else if (event.target.id == "off") {
+          document.getElementById("relaystate").innerHTML = buttonActions[event.target.id].status;
+        } else if (event.target.id == "restart") {
+          alert(text);
+        }
+      }
+    } catch (error) {
+      console.error("Failed sending command", error);
+    }
   }
 });
+
+// Add event delegation listener for all buttons within forms, to submit the nearest form with this generic function
+document.addEventListener('click', async function(event) {
+  // Check if the clicked element is a button inside a form
+  if (event.target.tagName === 'BUTTON' && event.target.closest('form')) {
+    event.preventDefault();
+
+    const form = event.target.closest('form'); // Get the parent form
+    const formId = form.id; // Get the form ID
+    
+    // Collect form data
+    const formData = new FormData(form);
+    const settings = Object.fromEntries(formData.entries());
+    console.log('Form Data:', settings);
+
+    try {
+      const response = await fetch(fullUrl+'settings', {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(settings)
+      });
+
+      if (!response.ok) {
+        console.log("http request failed when saving configs:", response.status);
+      }
+
+      const textResponse = await response.text();
+      alert(textResponse);
+
+    } catch (error) {
+      console.error('Error:', error);
+    }
+
+  }
 });
+
+// Populate the WiFi form when wifi fragment is being loaded
+async function populateWifiForm() {
+
+  // Set the SSID but not the password if exists
+  document.getElementById('ssid').value = configJson.ssid || '';
+};
+
+async function populateMqttForm() {
+  document.getElementById("mqttServer").value = configJson.mqttServer || "N/A";
+  document.getElementById("mqttPort").value = configJson.mqttPort || "N/A";
+  document.getElementById("mqttUser").value = configJson.mqttUser || "N/A";
+  document.getElementById("inletTempStateTopic").value = configJson.inletTempStateTopic || "N/A";
+  document.getElementById("outletTempStateTopic").value = configJson.outletTempStateTopic || "N/A";
+  document.getElementById("relayStateTopic").value = configJson.relayStateTopic || "N/A";
+  document.getElementById("relaySetTopic").value = configJson.relaySetTopic || "N/A";
+
+
+}
+
+/*
+Function fetches the known states from device through HTTP-request, and populates the status page with
+fresh values
+*/
+async function populateStates() {
+  // Load all the states with http request to global variable
+  statesJson = await loadData(fullUrl+'states');
+
+  // Set wifi states
+  const wifiStates = {
+    "STA": "Station",
+    "AP": "Access Point"
+  };
+
+  document.getElementById("wifimode").innerHTML = wifiStates[statesJson.wifiMode] || "N/A";
+  document.getElementById("ssid").innerHTML = statesJson.SSID || "N/A";
+  document.getElementById("wifiIP").innerHTML = statesJson.wifiIP || "N/A";
+
+  const mqttStates = {
+    true: "Connected",
+    false: "Disconnected"
+  };
+
+  // Set mqtt states
+  document.getElementById("mqttstatus").innerHTML = mqttStates[statesJson.MQTTConnected] || "N/A";
+  document.getElementById("mqttIP").innerHTML = statesJson.MQTTBroker || "N/A";
+  document.getElementById("mqttPort").innerHTML = statesJson.MQTTPort || "N/A";
+
+  // Set sensor states
+  document.getElementById("inlet").innerHTML = parseFloat(statesJson.InletTemp).toFixed(2) + "°C" || "N/A";
+  document.getElementById("outlet").innerHTML = parseFloat(statesJson.OutletTemp).toFixed(2) + "°C" || "N/A";
+
+  // Set relay states
+  const relayStates = {
+    "ON": "Active",
+    "OFF": "Inactive"
+  };
+
+  document.getElementById("relaystate").innerHTML = relayStates[statesJson.RelayState] || "N/A";
+}

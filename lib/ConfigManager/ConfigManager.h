@@ -11,6 +11,7 @@ class ConfigManager {
         ConfigManager(FileManager &fm);
         void loadConfig();
         bool saveConfig();
+        String getConfigAsJson();
 
         // Getters
         const char* getSSID();

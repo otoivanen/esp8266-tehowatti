@@ -20,20 +20,59 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config, SensorM
     });
 
     /*
-    Set CORS -options for savesettings route, needed while debugging to if making requests from different host than device itself
+    Serve the stylesheet
     */
-    on("/savesettings", HTTP_OPTIONS, [this]() {
-        sendHeader("Access-Control-Allow-Origin", "*");
-        sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        sendHeader("Access-Control-Allow-Headers", "Content-Type");
-        send(204);
+    on("/stylesheet", HTTP_GET, [this]() {
+        _streamFile("/style.css", "text/css");
     });
 
     /*
-    Route handles http request when config form is submitted. The received config is lightly validated with configmanager's setters. 
+    Serve the HTML fragments for maincontainer in index.html
+    */
+    on("/status", HTTP_GET, [this]() {
+    _streamFile("/status.html");
+    });
+
+   on("/mqttconfig", HTTP_GET, [this]() {
+        _streamFile("/mqttconfig.html");
+   });
+
+   on("/wificonfig", HTTP_GET, [this]() {
+        _streamFile("/wificonfig.html");
+   });
+
+   /*
+   Set global preflight cors options
+   */
+    onNotFound([&]() {
+        if (method() == HTTP_OPTIONS) {
+            sendHeader("Access-Control-Allow-Origin", "*");
+            sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            sendHeader("Access-Control-Allow-Headers", "Content-Type");
+            send(204);
+        }
+    });
+
+    /*
+    GET route for fetching configs as json from the configManager through HTTP-request
+    */
+    on("/settings", HTTP_GET, [this, &config]() {
+
+        sendHeader("Access-Control-Allow-Origin", "*");
+        sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        sendHeader("Access-Control-Allow-Headers", "Content-Type");
+
+        // Get the configs as json string
+        String jsonResponse = config.getConfigAsJson();
+
+        send(200, "application/json", jsonResponse);
+    });
+
+    /*
+    POST route handles http request when config form is submitted. The received config is lightly validated with configmanager's setters. 
     If invalid, error respose sent, if valid, config is saved to file.
     */
-    on("/savesettings", HTTP_POST, [this, &config]() {
+    on("/settings", HTTP_POST, [this, &config]() {
 
         sendHeader("Access-Control-Allow-Origin", "*");
         sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -67,7 +106,10 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config, SensorM
             if (doc.containsKey("relayStateTopic")) { validInputs &= config.setRelayStateTopic(doc["relayStateTopic"]); }
             if (doc.containsKey("relaySetTopic")) { validInputs &= config.setRelaySetTopic(doc["relaySetTopic"]); }
 
-            if(!validInputs) { send(500, "text/html", "Some inputs were invalid, check empty inputs and formats"); }
+            if(!validInputs) {
+                send(500, "text/html", "Some inputs were invalid, check empty inputs and formats"); 
+                return;
+            }
 
             config.saveConfig();
 
@@ -82,10 +124,16 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config, SensorM
     });
 
     /*
-    Route for actuating the Relay and updating related states via Web UI by receiving ON/OFF commands as query parameters.
-    If no parameters are given the current relay state is returned.
+    GET route for actuating the Relay and updating related states via Web UI by receiving ON/OFF commands as query parameters.
+    If no parameters are given the current relay state is returned. Route calls global function in main program to
+    perform sequence of actions across multiple classes
     */
    on("/relay", HTTP_GET, [this, &relay]() {
+
+    sendHeader("Access-Control-Allow-Origin", "*");
+    sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    sendHeader("Access-Control-Allow-Headers", "Content-Type");
+
     if(hasArg("state")) {
         String state = arg("state"); // Store the state value from query params
         
@@ -103,18 +151,48 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config, SensorM
         send(200, "text/html", relay.getState());
     }
    });
-}
+
+   /*
+   GET route to restart the device
+   */
+   on("/restart", HTTP_GET, [this]() {
+
+    sendHeader("Access-Control-Allow-Origin", "*");
+    sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    sendHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    send(200, "text/html", "Device is now restarting");
+    delay(1000);
+    ESP.restart();
+   });
+
+   /*
+   GET route to fetch device states as json
+   */
+  on("/states", HTTP_GET, [this]() {
+    sendHeader("Access-Control-Allow-Origin", "*");
+    sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    sendHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    send(200, "application/json", getStatesAsJson());
+  });
+
+};
 
 /*
 Private method to stream files from SPIFFS memory. Streaming is crucial here, not to load whole file into RAM 
-but instead sending it bit by bit
+but instead sending it bit by bit. Type defaults to text/html but can be overwritten if needed when streaming css files etc.
 */
-void WebServerManager::_streamFile(const char* path) {
+void WebServerManager::_streamFile(const char* path, const char* type) {
     File file = LittleFS.open(path, "r");
         if (!file) {
             send(404, "text/plain", "File not found");
+            return;
         }
 
-        size_t sent = streamFile(file, "text/html");
+        // Set the Content-Type header
+        sendHeader("Content-Type", type);
+
+        size_t sent = streamFile(file, type);
     file.close();
-}
+};

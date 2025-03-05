@@ -54,3 +54,12 @@ void OLEDManager::_drawRow(int row, const String& text) {
     print(text);
     display();
 };
+
+void OLEDManager::showBootMsg(const char* text) {
+    clearDisplay();
+    setTextColor(SSD1306_WHITE);
+    setTextSize(1);
+    setCursor(0,0);
+    print(text);
+    display();
+}

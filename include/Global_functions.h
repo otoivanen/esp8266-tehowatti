@@ -9,6 +9,7 @@ Author: Oskari Toivanen
 #ifndef GLOBAL_FUNCTIONS_H
 #define GLOBAL_FUNCTIONS_H
 
-void setRelayState(bool state); // Declare function
+void setRelayState(bool state);
+String getStatesAsJson();
 
 #endif

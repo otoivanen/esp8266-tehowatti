@@ -26,7 +26,7 @@ public:
     WebServerManager(uint16_t port, ConfigManager &config, SensorManager &sensors, Relay &relay);
 
 private:
-    void _streamFile(const char * path);
+    void _streamFile(const char * path, const char* type="text/html");
 };
 
 #endif
