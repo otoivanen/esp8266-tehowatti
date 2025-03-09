@@ -120,9 +120,7 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config, SensorM
             config.saveConfig();
 
             // Send OK response
-            send(200, "text/html", "Settings saved succesfully, device will reboot in 1sec");
-            delay(1000);
-            ESP.restart();
+            send(200, "text/html", "Settings saved succesfully, after finalizing configuration restart device from status page or unplug!");
 
         } else {
             send(400, "text/plain", "No config received!");

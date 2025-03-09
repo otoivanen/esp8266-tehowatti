@@ -48,11 +48,11 @@ void LEDManager::setStatus(bool apMode, bool mqttConnection, const char* relaySt
         lastApMode = apMode;
         lastState = "apMode";
         this->apMode();
-    } else if (!mqttConnection && mqttConnection != lastMqttConnection) {
+    } else if (!mqttConnection && mqttConnection != lastMqttConnection && !apMode) {
         lastMqttConnection = mqttConnection;
         lastState = "mqttConnection";
         this->alert();
-    } else if (relayState == "ON" && relayState != lastRelayState) {
+    } else if (relayState == "ON" && relayState != lastRelayState && !apMode) {
         lastRelayState = relayState;
         lastState = "relayActivated";
         this->relayActive();
