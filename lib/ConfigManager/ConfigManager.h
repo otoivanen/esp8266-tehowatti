@@ -24,6 +24,8 @@ class ConfigManager {
         const char* getOutletTempStateTopic();
         const char* getRelayStateTopic();
         const char* getRelaySetTopic();
+        const char* getInletSensorAddress();
+        const char* getOutletSensorAddress();
 
         // Setters
         bool setSSID(const char* ssid);
@@ -36,6 +38,8 @@ class ConfigManager {
         bool setOutletTempStateTopic(const char* outletStateTopic);
         bool setRelayStateTopic(const char* relayStateTopic);
         bool setRelaySetTopic(const char* relaySetTopic);
+        bool setInletSensorAddress(const char* inletSensorAddress);
+        bool setOutletSensorAddress(const char* outletSensorAddress);
 
     private:
         FileManager &_fm;
@@ -55,6 +59,10 @@ class ConfigManager {
         char _outletTempStateTopic[64] = "";
         char _relayStateTopic[64] = "";
         char _relaySetTopic[64] = "";
+
+        //Sensor configs
+        char _inletSensorAddress[24] = "";
+        char _outletSensorAddress[24] = "";
 
         // Validate lenght for strings in setters
         bool _validateLength(const char* data, unsigned long target);

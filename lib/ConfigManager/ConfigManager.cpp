@@ -30,6 +30,8 @@ void ConfigManager::loadConfig() {
         if (doc.containsKey("outletTempStateTopic")) { setOutletTempStateTopic(doc["outletTempStateTopic"]); }
         if (doc.containsKey("relayStateTopic")) { setRelayStateTopic(doc["relayStateTopic"]); }
         if (doc.containsKey("relaySetTopic")) { setRelaySetTopic(doc["relaySetTopic"]); }
+        if (doc.containsKey("inletSensorAddress")) { setInletSensorAddress(doc["inletSensorAddress"]); }
+        if (doc.containsKey("outletSensorAddress")) { setOutletSensorAddress(doc["outletSensorAddress"]); }
 
         Serial.println("Configs loaded from json: ");
         serializeJsonPretty(doc, Serial);
@@ -52,6 +54,8 @@ bool ConfigManager::saveConfig() {
     doc["outletTempStateTopic"] = _outletTempStateTopic;
     doc["relayStateTopic"] = _relayStateTopic;
     doc["relaySetTopic"] = _relaySetTopic;
+    doc["inletSensorAddress"] = _inletSensorAddress;
+    doc["outletSensorAddress"] = _outletSensorAddress;
 
     String serializedConfig;
     serializeJson(doc, serializedConfig);
@@ -263,5 +267,33 @@ bool ConfigManager::setRelaySetTopic(const char* relaySetTopic) {
 
     strncpy(_relaySetTopic, relaySetTopic, sizeof(_relaySetTopic) - 1);
     _relaySetTopic[sizeof(_relaySetTopic) - 1] = '\0';
+    return true;
+}
+
+const char* ConfigManager::getInletSensorAddress() {
+    return _inletSensorAddress;
+}
+
+bool ConfigManager::setInletSensorAddress(const char* inletSensorAddress) {
+    if(!_validateLength(inletSensorAddress, sizeof(_inletSensorAddress))) {
+        return false;
+    };
+
+    strncpy(_inletSensorAddress, inletSensorAddress, sizeof(_inletSensorAddress) - 1);
+    _inletSensorAddress[sizeof(_inletSensorAddress) - 1] = '\0';
+    return true;
+}
+
+const char* ConfigManager::getOutletSensorAddress() {
+    return _outletSensorAddress;
+}
+
+bool ConfigManager::setOutletSensorAddress(const char* outletSensorAddress) {
+    if(!_validateLength(outletSensorAddress, sizeof(_outletSensorAddress))) {
+        return false;
+    };
+
+    strncpy(_outletSensorAddress, outletSensorAddress, sizeof(_outletSensorAddress) - 1);
+    _outletSensorAddress[sizeof(_outletSensorAddress) - 1] = '\0';
     return true;
 }

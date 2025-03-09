@@ -102,6 +102,37 @@ body, html {
     font-size: 3em;
   }
 
+  .sensorcontainer {
+    max-width: 400px;
+    margin-bottom: 100px;
+    text-align: center;
+  }
+
+  .sensor-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+
+  .sensor-table th, .sensor-table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+  }
+
+  .sensor-table th {
+      color: #4CAF50;
+      font-weight: bold;
+  }
+
+  .sensor-table tr:nth-child(even) {
+      background-color: #f2f2f2;
+  }
+
+  .sensor-table tr:hover {
+      background-color: #ddd;
+  }
+
   button {
     background-color: #4CAF50;
     color: white;
@@ -111,6 +142,7 @@ body, html {
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+    margin-top: 20px;
   }
 
   button:hover {
@@ -191,6 +223,37 @@ body, html {
     max-width: 70%;
   }
 
+  /* Dropdown styling */
+  select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 1em;
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+  }
+
+  /* Dropdown focus effect */
+  select:focus {
+    border-color: #4CAF50;
+    outline: none;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+  }
+
+  /* Dropdown arrow */
+  select::-ms-expand {
+    display: none;
+  }
+
+  /* Dropdown options */
+  option {
+    font-size: 1em;
+    padding: 10px;
+  }
+
 
   /* Responsive Design */
   @media (max-width: 768px) {
@@ -225,5 +288,10 @@ body, html {
 
     .btn-container {
       padding-top: 15px;
+    }
+
+    select {
+      font-size: 1em;
+      padding: 8px;
     }
   }

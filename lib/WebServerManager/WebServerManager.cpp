@@ -41,6 +41,10 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config, SensorM
         _streamFile("/wificonfig.html");
    });
 
+   on("/sensorconfig", HTTP_GET, [this]() {
+        _streamFile("/sensorconfig.html");
+   });
+
    /*
    Set global preflight cors options
    */
@@ -105,6 +109,8 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config, SensorM
             if (doc.containsKey("outletTempStateTopic")) { validInputs &= config.setOutletTempStateTopic(doc["outletTempStateTopic"]); }
             if (doc.containsKey("relayStateTopic")) { validInputs &= config.setRelayStateTopic(doc["relayStateTopic"]); }
             if (doc.containsKey("relaySetTopic")) { validInputs &= config.setRelaySetTopic(doc["relaySetTopic"]); }
+            if (doc.containsKey("inletSensorAddress")) { validInputs &= config.setInletSensorAddress(doc["inletSensorAddress"]); }
+            if (doc.containsKey("outletSensorAddress")) { validInputs &= config.setOutletSensorAddress(doc["outletSensorAddress"]); }
 
             if(!validInputs) {
                 send(500, "text/html", "Some inputs were invalid, check empty inputs and formats"); 
@@ -176,6 +182,39 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config, SensorM
 
     send(200, "application/json", getStatesAsJson());
   });
+
+  /*
+  GET method for fetching sensor addresses & current temps for assignment
+  */
+ on("/sensors", HTTP_GET, [this, &sensors]() {
+
+    sendHeader("Access-Control-Allow-Origin", "*");
+    sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    sendHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    std::vector<SensorData> sensorList = sensors.getSensorData();
+
+    Serial.println(sensorList.size());
+
+    JsonDocument  doc; // Adjust size if needed
+    JsonArray sensorArray = doc.createNestedArray("sensors");
+
+    for (const auto& sensor : sensorList) {
+        JsonObject obj = sensorArray.createNestedObject();
+        char addressStr[25];
+        sprintf(addressStr, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", 
+            sensor.address[0], sensor.address[1], sensor.address[2], sensor.address[3], 
+            sensor.address[4], sensor.address[5], sensor.address[6], sensor.address[7]);
+        obj["address"] = addressStr;
+        obj["temperature"] = sensor.temperature;
+        Serial.println(addressStr);
+        Serial.println(sensor.temperature);
+    }
+
+    String jsonResponse;
+    serializeJson(doc, jsonResponse);
+    send(200, "application/json", jsonResponse);
+ });
 
 };
 
