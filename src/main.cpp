@@ -1,3 +1,17 @@
+/*
+ESP8266-Tehowatti program controls a device that reads two DS18B20 temperature sensors, and reports the values through MQTT
+to configurable topics. The program also controls a relay based on MQTT messages and/or HTTP-requests. The device can be configured and
+status checked through WebUI served from the device's webserver.
+
+Main program initializes the needed objects and performs the main loop of checking connections and connecting as needed, switching between STA/AP-modes,
+handling MQTT-communication and HTTP-requests. The detailed logics of each functionality is encapsulated inside the corresponding class. Main events
+of the main in addition to status checks and calling functions from other classes is to handle the MQTT-messaging. It includes also few global functions
+to allow global messaging between multiple classes.
+
+Author: Oskari Toivanen
+Date: 2025-03-09
+*/
+
 #include <Arduino.h>
 #include <WiFiManager.h>
 #include <WebServerManager.h>
@@ -98,9 +112,13 @@ void loop() {
   oled.updateDisplay(sensors.getInletTemp(), sensors.getOutletTemp(), relay.getState(), wm.getIP(), wm.getMode(), mqttClient.connected());
 }
 
-/*
-Function to handle MQTT connection with restricted retry interval, and subscribe to needed topics when connecting.
-*/
+/**
+ * @brief Checks MQTT-connection status and reconnects on preset interval if needed
+ * 
+ * If WiFi-connection is established, and time defined in MQTT_RECONNECT_INTERVAL constant
+ * has passed, device retries the connection to MQTT-broker. After succesful connection the needed
+ * topics are being subscribed.
+ */
 void connectMqtt() {
   static unsigned long lastConnectionAttempt = 0;
 
@@ -120,10 +138,21 @@ void connectMqtt() {
   }
 }
 
-/*
-Function performs the check if sensor values are allowed to be published by calculating change in temperature
-and publish min-max time intervals
-*/
+/**
+ * @brief Determines if a sensor value is allowed to be published over MQTT
+ * 
+ * The function checks two conditions to allow publishing:
+ * 1. If the elapsed time since last publish exceeds the minimum interval and
+ * the temperature change exceeds a defined treshold (0.1c)
+ * 2. If the maximum allowed publish interval has been exceeded, regardless of temperature change
+ * 
+ * Additionally, publishing is allowed only if the MQTT client is currently connected.A0
+ * 
+ * @param lastPublish the timestamp (in milliseconds) of the last succesful publish
+ * @param lastTemp the last published temperature value
+ * @param currentTemp the current temperature reading
+ * @return true if publishing is allowed based on the condition, false otherwise
+ */
 bool isPublishAllowed(unsigned long &lastPublish, float &lastTemp, float &currentTemp) {
   unsigned long fromLastPublish = millis() - lastPublish;
 
@@ -136,10 +165,12 @@ bool isPublishAllowed(unsigned long &lastPublish, float &lastTemp, float &curren
   return false;
 }
 
-/*
-Function handles publishing the sensor values to selected MQTT-topics if allowance criteria is met (interval & temp change)
-and maintains the last reading and current reading values for comparison
-*/
+/**
+ * @brief Handles the publishing of the sensor values to MQTT broker.
+ * 
+ * The function maintains the previous temperature- and publishtime values for determining if publishing is allowed.
+ * Function fetches latest readings for both sensors and publishes the values into MQTT topics defined in configs if allowed.
+ */
 void publishSensorValues() {
   static unsigned long lastInletTempPublish = 0; // static will retain the value from last execution
   static unsigned long lastOutletTempPublish = 0;
@@ -172,10 +203,17 @@ void publishSensorValues() {
   }
 }
 
-/*
-Callback function for MQTT-client that handles the incoming messages and forwards them
-for further processing. Function is executed everytime a MQTT-message is received
-*/
+/**
+ * @brief Callback function executed whenever an MQTT message is received from the broker.
+ * 
+ * This function is triggered automatically when a subscribed MQTT topic receives a message. 
+ * It parses the incoming payload, converts it to a string, and processes the message.
+ * If the message is "ON" or "OFF", it updates the relay state accordingly.
+ * 
+ * @param topic The MQTT topic on which the message was received.
+ * @param payload The actual message data in byte format.
+ * @param length The length of the incoming message payload.
+ */
 void callback(char* topic, byte* payload, unsigned int length) {
 
   char message[10]; // Buffer large enough for "ON", "OFF", and null terminator
@@ -195,10 +233,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
-/*
-A Non-blocking function that forces relay state to be published with specified time intervals
-in case if the state falls unknown for some reason
-*/
+/**
+ * @brief Publishes the relaystate (on/off) with defined interval to make sure MQTT broker is synced with device status
+ * 
+ * The function checks if MQTT connection is established, and the defined time interval has passed between last publish.
+ */
 void publishRelayState() {
   static unsigned long lastRelayStatePublish = 0;
 
@@ -209,10 +248,16 @@ void publishRelayState() {
   }
 }
 
-/*
-Global function accessible from all classes to perform all necessary operations on relay state change (publish state etc.)
-Regardless of where the function was called from
-*/
+/**
+ * @brief Global function to set relay state and perform sequence of actions related to relay statechange
+ * 
+ * Based on the command function sets relay activated or deactivated, and sends the state message to MQTT broker
+ * which keeps other devices aware of the state. Function also switches the LED-indicator to show blue / standby
+ * based on state changes. Being a global function it can be accessed from any class and thus the relay, LED and
+ * MQTT message are sent regardless if state change was requested through HTTP-request or MQTT message.
+ * 
+ * @param state true switches the relay active, false deactivates the relay
+ */
 void setRelayState(bool state) {
   if (state) {
     relay.on();
@@ -225,12 +270,15 @@ void setRelayState(bool state) {
   } 
 }
 
-/*
-Global function accesible from all classess to retrieve all necessary statuses, primarily for displaying in Web UI
-*/
-/*
-Method returns full config excluding secrets as json for passing back to browser through http-request
-*/
+/**
+ * @brief Function returns the JSON-string containing all necessary states of the device for displaying in UI
+ * 
+ * Function checks the WiFi state (AP/STA) and gets the SSID from wifi controller. Then JSON
+ * object is then formed by getting the states and configs from all necessary classes. Function is defined as
+ * global to be accessible from WebServer class, and still being able to gather states from all objects
+ * 
+ * @return JSON-string containing necessary configs and states for WebUI
+ */
 String getStatesAsJson() {
   JsonDocument doc;
 

@@ -1,13 +1,19 @@
 #include <ConfigManager.h>
 
-// Constructor
+/**
+ * @brief Constructor creates a ConfigManager object utilizing a FileManager object to interact with FS
+ * 
+ * FileManager object is passed to constructor as a reference.
+ */
 ConfigManager::ConfigManager(FileManager &fm) : _fm(fm) {
 }
 
-/*
-* Deserializes the config.json file into json document if exists, and places the config values in the instances member variables
-* The values have been lightly validated when saving the config.json through UI so there should not need for validation when loading.
-*/
+/**
+ * @brief Reads existing configuration from /config.json file and sets them as active config through setters
+ * 
+ * Method utilizes FileManager object to access config.json file inthe SPIFFS memory and read the configs.
+ * Activating config through setter methods validates the configs on the fly.
+ */
 void ConfigManager::loadConfig() {
     // Read config from file and deserialize into json doc
     String configString = _fm.readFile("/config.json");
@@ -38,9 +44,12 @@ void ConfigManager::loadConfig() {
     }
 }
 
-/*
-* Serialize configs into json document and save into file
-*/
+/**
+ * @brief Saves existing member variables of ConfigManager object to SPIFFS memory as persisted config.json
+ * 
+ * Method composes a JSON-string from all member variables of config manager object and stores it into
+ * config.json file with filemanager. File is always overwritten.
+ */
 bool ConfigManager::saveConfig() {
     JsonDocument doc;
 
@@ -67,9 +76,14 @@ bool ConfigManager::saveConfig() {
     return true;
 }
 
-/*
-Method returns full config excluding secrets as json for passing back to browser through http-request
-*/
+/**
+ * @brief Returns all configs excluding passwords as JSON-string
+ * 
+ * Configs are needed in the WebUI for pre-populating forms etc., and there configs as json are handy.
+ * Method composes JSON string but excludes sensitive passwords to be utilized elsewhere.
+ * 
+ * @return JSON-string containing all configurations except passwords
+ */
 String ConfigManager::getConfigAsJson() {
     JsonDocument doc;
 
@@ -92,15 +106,16 @@ String ConfigManager::getConfigAsJson() {
     return serializedConfig;
 }
 
-/*
-Validate lenght of char input to make sure the input is not empty and it fits into memory allocated to member variable
-
-PARAMS
-    - const char* data, the string to validate
-    - unsigned long targetSize, the sizeof target variable
-RETURN
-    - boolean
-*/
+/**
+ * @brief Validates the chars length to make sure it fits in the reserved space
+ * 
+ * Method receives the size of the target member variable where data will be stored, and current data
+ * that will be stored and validates that memory allocation is not exceeded
+ * 
+ * @param data The chars to be stored into config manager
+ * @param targetSize The space allocation of inteded member variable
+ * @return true if data fits to target, else flase.
+ */
 bool ConfigManager::_validateLength(const char* data, unsigned long targetSize) {
     if (strlen(data) == 0 || strlen(data) > targetSize) {
         return false;
@@ -109,23 +124,19 @@ bool ConfigManager::_validateLength(const char* data, unsigned long targetSize) 
     return true;
 }
 
-/*
-Getters and setters
-
-All member variables have getters and setters. String inputs are copied from into member variable
-and ensured that they have null terminator for further use, and that they fit into target variable.
-Setters return boolean value for the caller to know if it was succesful or not
-
-PARAMS:
-    - values to set into config, type dependant of configvariable
-RETURN:
-    - boolean
-*/
-
 const char* ConfigManager::getSSID() {
     return _SSID;
 }
 
+/**
+ * @brief Stores SSID into ConfigManager member variable with validation
+ * 
+ * Data is validated to fit into variable, and then value is copied into
+ * member variable and null-terminator is being added into variable.
+ * Same logic applies to all setters.
+ * 
+ * @param ssid The SSID to be stored into member variable
+ */
 bool ConfigManager::setSSID(const char* ssid) {
     if(!_validateLength(ssid, sizeof(_SSID))) {
         return false;
@@ -156,6 +167,16 @@ IPAddress ConfigManager::getMqttServer() {
     return _mqttServer;
 }
 
+/**
+ * @brief Validates and stores MQTT broker address
+ * 
+ * _mqttServer is type IPAddress, which contains method to parse IP-address from
+ * string and validate it is proper. The received chars are parsed to IP and result is returned.
+ * If IP address structure was it will fail.
+ * 
+ * @param mqttServer The MQTT broker address as chars
+ * @return true if possible to parse into IPAddress, else false.
+ */
 bool ConfigManager::setMqttServer(const char* mqttServer) {
     // Parse and validate IP address with method that returns false if string cannot be parsed to IPAddress object
     if(!_mqttServer.fromString(mqttServer)) {
@@ -169,9 +190,16 @@ int ConfigManager::getMqttPort() {
     return _mqttPort;
 }
 
+/**
+ * @brief Stores MQTT port as integer to member variable
+ * 
+ * Converts the received mqttPort as chars into integer, and lightly validates that the port is > 0 and < 65535
+ * 
+ * @param mqttPort as chars
+ * @return true if was convertable and > 0 and < 65535 else false
+ */
 bool ConfigManager::setMqttPort(const char* mqttPort) {
-    // Parse and validate port. Atoi() returns 0 if value cannot be parsed to int, and 0 is invalid port value
-    // Also check that given port is in proper range
+
     int port = atoi(mqttPort);
     if(port > 0 && port <= 65535) {
         _mqttPort = port;

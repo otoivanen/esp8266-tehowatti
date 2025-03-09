@@ -1,3 +1,10 @@
+/*
+WiFiManager class extends the native ESP8266WiFiClass, and encapsulates needed additional logics for handling 
+reconnections, accespoint logic and returns states needed for displaying in the Web UI.
+
+Author: Oskari Toivanen
+Date: 2025-03-09
+*/
 #ifndef WiFiManager_h
 #define WiFiManager_h
 

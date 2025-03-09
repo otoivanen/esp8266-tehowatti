@@ -1,5 +1,12 @@
 #include <LEDManager.h>
 
+/**
+ * @brief The constructor that extends Adafruit_NeoPixel class and predefines LED colors
+ * 
+ * Constructor is set up by needed parameters for WS1812B RGB-led to be controlled.
+ * The led brightness and color can be adjusted. The constructor sets the predefined alert,
+ * standby, relay and apMode colors as Color objects to member variables for further reference.
+ */
 LEDManager::LEDManager() : Adafruit_NeoPixel (1, 15, NEO_GRB + NEO_KHZ800) {
     _alertColor = Color(255, 0, 0);
     _standByColor = Color(0, 255, 0);
@@ -7,6 +14,9 @@ LEDManager::LEDManager() : Adafruit_NeoPixel (1, 15, NEO_GRB + NEO_KHZ800) {
     _apModeColor = Color(153, 102, 204);
 };
 
+/**
+ * @brief Starts the led operation and does the initial brightness- and color setup
+ */
 void LEDManager::enable() {
     begin();
     setBrightness(10);
@@ -14,6 +24,9 @@ void LEDManager::enable() {
     show();
 }
 
+/**
+ * @brief Method (and below methods too) set the relay into predefined mode (color)
+ */
 void LEDManager::alert() {
     setPixelColor(0, _alertColor);
     show();
@@ -34,10 +47,17 @@ void LEDManager::apMode() {
     show();
 };
 
-/*
-Control the led based on device states in non-blocking manner by checking changes in variables before 
-sending commands to the led itself. Device can have three separate states.
-*/
+/**
+ * @brief Includes the LED color controls based on the device states in non-blocking manner
+ * 
+ * Method takes necessary states as parameters and encapsulates the logic for setting LED color
+ * based on the device state. By storing and comparing current states to previous states the LED 
+ * remains responsive and non-blocking (not being updated on every loop cycle)
+ * 
+ * @param apMode true/false whether device is in Accesspoint Mode
+ * @param mqttConnection true/false whether device is connected to MQTT broker
+ * @param relayState ON/OFF whehter relay is activated or deactivated
+ */
 void LEDManager::setStatus(bool apMode, bool mqttConnection, const char* relayState) {
     static bool lastApMode = false;
     static bool lastMqttConnection = true;

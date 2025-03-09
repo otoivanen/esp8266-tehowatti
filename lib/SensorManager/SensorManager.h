@@ -1,3 +1,12 @@
+/*
+SensorManager class contains DallasTemperature sensor object as attribute which allows interacting with
+DS18B20 sensors in I2C bus. The class provides additional methods for interacting and storing state-
+and address information and distribute it across the program
+
+Author: Oskari Toivanen
+Date: 2025-03-09
+*/
+
 #ifndef SensorManager_h
 #define SensorManager_h
 

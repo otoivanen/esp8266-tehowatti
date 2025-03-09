@@ -3,6 +3,11 @@
 FileManager::FileManager() {
 }
 
+/**
+ * @brief Tries to mount filesystem into use
+ * 
+ * @return True if succesfully mounted, else false
+ */
 bool FileManager::begin() {
     // Mount the filesystem to store and retrieve configurations
     if (!LittleFS.begin()) {
@@ -14,14 +19,17 @@ bool FileManager::begin() {
     }
 }
 
-/*
-Save data to path specified as parameter
-Parameters:
-    - const char* filename (path)
-    - String data
-Return:
-    - bool, true on success and false on failure
-*/
+/**
+ * @brief Saves data into file in SPIFFS
+ * 
+ * Method creates the file given as parameter and writes the data, doing needed validity checks
+ * File is being properly closed after writing.
+ * 
+ * @param filename The filename to be stored into SPIFFS
+ * @param data The data contents to be written into file
+ * 
+ * @return True if saved succesfully, else false
+ */
 bool FileManager::saveFile(const char* filename, const String &data) {
     File file = LittleFS.open(filename, "w"); // Open file in write mode
 
@@ -43,14 +51,16 @@ bool FileManager::saveFile(const char* filename, const String &data) {
     return true;
 }
 
-/*
-Reads file from specified path and returns content as string or empty string if failed to open file
-Params:
-    - const char* filename (path)
-Return:
-    - String contents if file found
-    - String "" if failed to open file
-*/
+/**
+ * @brief Read file with given filename and return the contents as string
+ * 
+ * Opens the file defined as parameter, and appends the content chars as long as they are
+ * available to result string. After reading the file is properly closed.A0
+ * 
+ * @param filename The filename to be read
+ * 
+ * @return Filecontents as String
+ */
 String FileManager::readFile(const char* filename) {
     File file = LittleFS.open(filename, "r"); // Open file in read mode
 
