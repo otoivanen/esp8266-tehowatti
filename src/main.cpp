@@ -53,6 +53,10 @@ void setup() {
   fm.begin(); // Initialize the FS
   config.loadConfig(); // Load all configs from file
 
+  // Set the sensor addresses from config
+  sensors.setInletSensorAddress(config.getInletSensorAddress());
+  sensors.setOutletSensorAddress(config.getOutletSensorAddress());
+
   wm.setCredentials(config.getSSID(), config.getWiFiPassword(), DEVICE_NAME);
   
   oled.showBootMsg("Trying to establish WiFi Connection");
@@ -248,6 +252,8 @@ String getStatesAsJson() {
   doc["InletTemp"] = sensors.getInletTemp();
   doc["OutletTemp"] = sensors.getOutletTemp();
   doc["RelayState"] = relay.getState();
+  doc["inletSensorAddress"] = sensors.getInletSensorAddress();
+  doc["outletSensorAddress"] = sensors.getOutletSensorAddress();
 
   // Serialize JSON document into a string
   String serializedStates;

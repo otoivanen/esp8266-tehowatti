@@ -34,6 +34,12 @@ document.getElementById("statusMenu").addEventListener('click', async () => {
   await loadPage(fullUrl+'status');
 })
 
+// Load sensor config page
+document.getElementById("sensorMenu").addEventListener('click', async () => {
+  await loadPage(fullUrl+'sensorconfig');
+  document.getElementById('getSensorsButton').addEventListener('click', getAvailableSensors);
+})
+
 // Generic function to fetch and load pages dynamically
 async function loadPage(url) {
   try {
@@ -186,7 +192,9 @@ async function populateStates() {
 
   // Set sensor states
   document.getElementById("inlet").innerHTML = parseFloat(statesJson.InletTemp).toFixed(2) + "°C" || "N/A";
+  document.getElementById("inletSensorAddress").innerHTML = statesJson.inletSensorAddress || "N/A"
   document.getElementById("outlet").innerHTML = parseFloat(statesJson.OutletTemp).toFixed(2) + "°C" || "N/A";
+  document.getElementById("outletSensorAddress").innerHTML = statesJson.outletSensorAddress || "N/A"
 
   // Set relay states
   const relayStates = {
@@ -195,4 +203,71 @@ async function populateStates() {
   };
 
   document.getElementById("relaystate").innerHTML = relayStates[statesJson.RelayState] || "N/A";
+}
+
+/*
+Fetch the available sensors
+*/
+async function getAvailableSensors() {
+  console.log("Fetchign available sensors");
+
+  let sensorData = await loadData(fullUrl+"sensors")
+
+  let sensorDiv = document.getElementById("availableSensors");
+  let inletDropdown = document.getElementById("inletSensorAddress");
+  let outletDropdown = document.getElementById("outletSensorAddress");
+
+
+  // Clear the div
+  sensorDiv.innerHTML = "<label>Available sensors:</label>";
+  inletDropdown.innerHTML = '<option value="">Select a sensor</option>';
+  outletDropdown.innerHTML = '<option value="">Select a sensor</option>';
+
+  if (!sensorData.sensors || sensorData.sensors.length === 0) {
+    sensorDiv.innerHTML += "<p>No sensors found, check the wiring ⚠️"
+  } else {
+    // Generate a table
+    let table = document.createElement("table");
+    table.classList.add("sensor-table");
+
+    // Headers
+    let thead = table.createTHead();
+    let headerRow = thead.insertRow();
+    ["Address", "Temperature (°C)"].forEach((text) => {
+      let th = document.createElement("th");
+      th.textContent = text;
+      th.style.border = "1px solid black";
+      th.style.padding = "5px";
+      headerRow.appendChild(th);
+    });
+
+    // Create table body
+    let tbody = table.createTBody();
+    sensorData.sensors.forEach((sensor) => {
+      // Add dropdown options
+      let option1 = document.createElement("option");
+      option1.value = sensor.address;
+      option1.textContent = sensor.address;
+      inletDropdown.appendChild(option1);
+
+      let option2 = document.createElement("option");
+      option2.value = sensor.address;
+      option2.textContent = sensor.address;
+      outletDropdown.appendChild(option2);
+
+      // Add rows to table
+      let row = tbody.insertRow();
+
+      // Address column
+      let addressCell = row.insertCell();
+      addressCell.textContent = sensor.address;
+
+      // Temperature column
+      let tempCell = row.insertCell();
+      tempCell.textContent = sensor.temperature.toFixed(1) + "°C"; // 1 decimal place
+    });
+
+    // Append table to div
+    sensorDiv.appendChild(table);
+  }
 }

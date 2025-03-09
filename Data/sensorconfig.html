@@ -1,0 +1,30 @@
+    <h1>Sensor Configuration</h1>
+    <div class="sensorcontainer">
+      <p>
+        Assign the sensor found in the bus as inlet and outlet sensors. Click the button to refresh the list of connected sensors.
+      </p>
+      <p>
+        For identifying the correct sensor, warm one of the sensors e.g. with your hand to identify it based on higher temperature.
+      </p>
+      <div style="margin-top: 30px" id="availableSensors">
+        <label>Available sensors:</label>
+
+        </table>
+      </div>
+      <button id="getSensorsButton">Find available sensors</button>
+    </div>
+
+    <form id="settingsForm">
+      <label for="inletSensorAddress">Inlet temperature sensor address</label>
+      <select id="inletSensorAddress" name="inletSensorAddress" required>
+        <option value="">Select a sensor</option>
+      </select>
+    
+      <label for="outletSensorAddress">Outlet temperature sensor address</label>
+      <select id="outletSensorAddress" name="outletSensorAddress" required>
+        <option value="">Select a sensor</option>
+      </select>
+    
+      <button type="button" id="saveButton">Save Settings</button>
+    </form>
+

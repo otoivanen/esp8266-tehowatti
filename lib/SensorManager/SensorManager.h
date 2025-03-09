@@ -3,17 +3,29 @@
 
 #include <DallasTemperature.h>
 #include <OneWire.h>
+#include <vector>
+
+// A struct for holding sensor address + current temp values 
+struct SensorData {
+    uint8_t address[8];  // Store sensor address (8 bytes)
+    float temperature; // Store current temperature
+};
 
 class SensorManager {
 public:
     SensorManager(const int onewire_pin);
     void readSensors(); // Update sensorvalues
-    void searchSensors(); // Search available sensor addresses
+    std::vector<SensorData> getSensorData(); // Search available sensor addresses
     
     float getInletTemp();
     float getOutletTemp();
     float getLastInletTemp();
     float getLastOutletTemp();
+    
+    const char* getInletSensorAddress();
+    void setInletSensorAddress(const char* inletSensorAddress);
+    const char* getOutletSensorAddress();
+    void setOutletSensorAddress(const char* outletSensorAddress);
 
 private:
     OneWire _oneWire;
@@ -30,6 +42,9 @@ private:
     // Last measured temperatures
     float _lastInletTemp = 0.00;
     float _lastOutletTemp = 0.00;
+
+    // Utils
+    void _parseAddressFromString(const char* addr, DeviceAddress &outAddress);
 };
 
 #endif
