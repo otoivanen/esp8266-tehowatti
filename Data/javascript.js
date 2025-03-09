@@ -4,8 +4,10 @@ const host = window.location.host;
 const http = host.startsWith('http://') ? '' : 'http://';
 const separator = host.endsWith('/') ? '' : '/';
 const fullUrl = http + host + separator;
-let configJson = {}; // Initialize the configjson to populate it on first load
+let configJson = {};
 let statesJson = {};
+let statusInterval = null; // Placeholder for interval to refresh states in background
+let currentPage = ""; // Track the current active page
 
 console.log(fullUrl);
 
@@ -32,6 +34,7 @@ document.getElementById("settingsMenu").addEventListener('click', async () => {
 // Load status page
 document.getElementById("statusMenu").addEventListener('click', async () => {
   await loadPage(fullUrl+'status');
+  await populateStates();
 })
 
 // Load sensor config page
@@ -49,11 +52,10 @@ async function loadPage(url) {
     const html = await response.text();
     document.getElementById('mainContainer').innerHTML = html;
 
-    // Prepopulate values as necessary depending on which fragment was loaded
-    if (url.includes('wificonfig')) {
-      await populateWifiForm();
-    } else if (url.includes('status')) {
-      await populateStates();
+    if (url.includes("status")) {
+      startStatusInterval();
+    } else {
+      stopStatusInterval();
     }
 
   } catch (error) {
@@ -147,17 +149,24 @@ document.addEventListener('click', async function(event) {
 async function populateWifiForm() {
 
   // Set the SSID but not the password if exists
-  document.getElementById('ssid').value = configJson.ssid || '';
+  "ssid" in configJson && (document.getElementById('ssid').value = configJson.ssid);
 };
 
 async function populateMqttForm() {
-  document.getElementById("mqttServer").value = configJson.mqttServer || "N/A";
-  document.getElementById("mqttPort").value = configJson.mqttPort || "N/A";
-  document.getElementById("mqttUser").value = configJson.mqttUser || "N/A";
-  document.getElementById("inletTempStateTopic").value = configJson.inletTempStateTopic || "N/A";
-  document.getElementById("outletTempStateTopic").value = configJson.outletTempStateTopic || "N/A";
-  document.getElementById("relayStateTopic").value = configJson.relayStateTopic || "N/A";
-  document.getElementById("relaySetTopic").value = configJson.relaySetTopic || "N/A";
+  // In case mqttPort and mqttServer defaults to (IP Unset) or 0 we don't want to populate them. Rest of the values default to "" which are not populated.
+  if (configJson.mqttServer && configJson.mqttServer !== "(IP unset)") {
+    document.getElementById("mqttServer").value = configJson.mqttServer
+  };
+  
+  if (configJson.mqttPort > 0) {
+    document.getElementById("mqttPort").value = configJson.mqttPort
+  };
+
+  "mqttUser" in configJson && (document.getElementById("mqttUser").value = configJson.mqttUser);
+  "inletTempStateTopic" in configJson && (document.getElementById("inletTempStateTopic").value = configJson.inletTempStateTopic);
+  "outletTempStateTopic" in configJson && (document.getElementById("outletTempStateTopic").value = configJson.outletTempStateTopic);
+  "relayStateTopic" in configJson && (document.getElementById("relayStateTopic").value = configJson.relayStateTopic);
+  "relaySetTopic" in configJson && (document.getElementById("relaySetTopic").value = configJson.relaySetTopic);
 
 
 }
@@ -269,5 +278,22 @@ async function getAvailableSensors() {
 
     // Append table to div
     sensorDiv.appendChild(table);
+  }
+}
+
+// Function to start the status update interval
+function startStatusInterval() {
+  if (!statusInterval) {
+      statusInterval = setInterval(async () => {
+        await populateStates();
+      }, 5000); // Every 5 seconds
+  }
+}
+
+// Function to stop the status update interval
+function stopStatusInterval() {
+  if (statusInterval) {
+      clearInterval(statusInterval);
+      statusInterval = null;
   }
 }

@@ -83,7 +83,7 @@ void loop() {
   wm.checkWiFiStatus(); 
 
   // Ensure mqtt broker is connected and attempt reconnect if not
-  if (!mqttClient.connected()) {
+  if (!mqttClient.connected() && !wm.isAPOn()) {
     connectMqtt();
   }
 

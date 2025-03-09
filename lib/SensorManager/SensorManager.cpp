@@ -55,11 +55,11 @@ std::vector<SensorData> SensorManager::getSensorData() {
 
 // Getters and setters
 float SensorManager::getInletTemp() {
-    return _lastInletTemp;
+    return _inletTemp;
 };
 
 float SensorManager::getOutletTemp() {
-    return _lastOutletTemp;
+    return _outletTemp;
 };
 
 float SensorManager::getLastInletTemp() {
