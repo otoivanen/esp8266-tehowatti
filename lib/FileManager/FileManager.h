@@ -1,3 +1,11 @@
+/*
+The FileManager class interacts with device's internal SPIFFS filesystem to store and retrieve files. It encapsulates
+necessary validations and checks.
+
+Author: Oskari Toivanen
+Date: 2025-03-09
+*/
+
 #ifndef FileManager_h
 #define FileManager_h
 

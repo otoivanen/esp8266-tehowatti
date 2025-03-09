@@ -1,3 +1,11 @@
+/*
+Relay class encapsulates the functionalities needed for controlling relay through device IO, and keeps track of the
+led's current state as descriptive text.
+
+Author: Oskari Toivanen
+Date: 2025-03-09
+*/
+
 #ifndef Relay_h
 #define Relay_h
 

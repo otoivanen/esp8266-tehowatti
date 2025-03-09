@@ -1,8 +1,27 @@
 #include <WebServerManager.h>
 
-/*
-Constructor calls the base class constructor and takes the port and reference to filemanager, sensors and relay for accessing the other classes states.
-*/
+/**
+ * @brief The constructor extends the ESP8266WebServer constructor, and takes multiple object references for interaction as parameter
+ * 
+ * Constructor takes intially the port for HTTP-requests as parameter, but in addition references to all objects
+ * that need to be interacted through WebUI. ConfigManager object allows configs to be read & stored through UI,
+ * SensorManager allows sensorvalues & addresses to be accessed and relay-object reference allows the relay to be controlled.
+ * In addition, routes utilize few global functions declared in main program to avoid excess object references.
+ * 
+ * Constructor holds definitions of all routes involved in the program which are correspondingly commented in the code. The routes serve
+ * following purposes
+ * 
+ * 1) GET routes to serve static files from SPIFFS (.html, .js, .css)
+ * 2) GET routes to serve HTML-fragments from either SPIFFS or generated in JS file
+ * 3) GET routes to return JSON objects for dynamic content update in WebUI (sensor values etc.)
+ * 4) GET routes to control the device with query parameters (relay) and restart etc
+ * 4) POST routes to receive configuration data as JSON in body and validate & store it through configmanager
+ * 
+ * The static files are sending via streaming to avoid loading files into RAM as whole and avoid memory issues. Currently CORS is enabled for each
+ * route to ease debugging.
+ * 
+ * Routes return HTTP-codes alongside with messages to be alerted in browser as feedback
+ */
 WebServerManager::WebServerManager(uint16_t port, ConfigManager &config, SensorManager &sensors, Relay &relay) : ESP8266WebServer(port) {
 
     /*
@@ -216,10 +235,15 @@ WebServerManager::WebServerManager(uint16_t port, ConfigManager &config, SensorM
 
 };
 
-/*
-Private method to stream files from SPIFFS memory. Streaming is crucial here, not to load whole file into RAM 
-but instead sending it bit by bit. Type defaults to text/html but can be overwritten if needed when streaming css files etc.
-*/
+/**
+ * @brief Private method to stream files
+ * 
+ * Streams the static files in chunks to avoid loading them into RAM and running out of memory.
+ * Sends "text/plain" as default content type unless defined in parameter
+ * 
+ * @param path The filepath to open and stream in SPIFFS memory e.g. /index.html
+ * @param type The Content-Type of response, e.g. "text/plain" or "application/json"
+ */
 void WebServerManager::_streamFile(const char* path, const char* type) {
     File file = LittleFS.open(path, "r");
         if (!file) {

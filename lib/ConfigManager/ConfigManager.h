@@ -1,3 +1,12 @@
+/*
+ConfigManager class interacts with the config.json file stored in device's SPIFFS memory. Cm stores configs given through
+Web UI and retrieves the configs on startup for initialization of classes, e.g. WiFi, MQTT and sensor configs. The class
+setters contain light validation for the configs when needed, e.g. IP-address formats.
+
+Author: Oskari Toivanen
+Date: 2025-03-09
+*/
+
 #ifndef ConfigManager_h
 #define ConfigManager_h
 

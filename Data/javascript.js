@@ -1,17 +1,23 @@
-// Generate url for the http request
-//const saveSettingsEndpoint = "http://192.168.1.177"
+/*
+On load, generate the baseurl from browser's current IP because page might be served from unknown IP
+*/
 const host = window.location.host;
 const http = host.startsWith('http://') ? '' : 'http://';
 const separator = host.endsWith('/') ? '' : '/';
 const fullUrl = http + host + separator;
+console.log(fullUrl);
+
+/*
+Declare global variables to hold configs & states received from device accessible for all functions
+*/
 let configJson = {};
 let statesJson = {};
 let statusInterval = null; // Placeholder for interval to refresh states in background
-let currentPage = ""; // Track the current active page
 
-console.log(fullUrl);
-
-// Executed when the DOM is first loaded. Fetch needed configs and states, and load the status fragment as default
+/*
+When the DOM is first loaded, fetch the full config from device through settings -endpoint,
+load the statuspage -fragment and populate it with current device status
+*/
 document.addEventListener("DOMContentLoaded", async () => {
   configJson = await loadData(fullUrl+'settings');
   
@@ -19,7 +25,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   await populateStates();
 });
 
-// Load Wifi config form
+/*
+Attach event listener to wifiConfigMenu button with command to load the WiFiConfig -fragment
+and pre-populate the form from existing config (except password) if available.
+
+Following functions work in the same manner, load page and populate data
+*/
 document.getElementById("wifiConfigMenu").addEventListener('click', async () => {
   await loadPage(fullUrl+'wificonfig');
   await populateWifiForm();
@@ -43,7 +54,13 @@ document.getElementById("sensorMenu").addEventListener('click', async () => {
   document.getElementById('getSensorsButton').addEventListener('click', getAvailableSensors);
 })
 
-// Generic function to fetch and load pages dynamically
+/*
+A generic function to load HTML fragments into mainContainer. Takes full url as parameter
+and fetches the fragment from device's endpoint serving the fragment.
+
+If the loaded fragment was status-section, 5sec reload interval is initiated that re-populates
+the temperatures every 5secs. If any other fragment was loaded, the interval is disabled.
+*/
 async function loadPage(url) {
   try {
     const response = await fetch(url);
@@ -64,7 +81,10 @@ async function loadPage(url) {
 
 }
 
-// Generic function to fetch json data e.g. statuses and configs. Takes url as param and returns json data to caller
+/*
+A generic function to fetch JSON-data, e.g. statuses, configs and sensordata for updating
+the UI elements dynamically. Takes the endpoint url as parameter and returns JSON content.
+*/
 async function loadData(url) {
   try {
     const response = await fetch(url);
@@ -80,19 +100,26 @@ async function loadData(url) {
 
 };
 
-// Add event delegation listener for elements loaded later into DOM
+/*
+Add event delegation listeners for components that are dynamically loaded into DOM and not necessarily visible on page load
+Define url & status mappings for certain id's that are utilized when elements appear in DOM.
+*/
 document.addEventListener('click', async (event) => {
+  // Map the button actions and statustext based on their id
   const buttonActions = {
     on: { url: fullUrl+"relay?state=ON", status: "Active"},
     off: { url: fullUrl+"relay?state=OFF", status: "Inactive" },
     restart: { url: fullUrl+"restart" } // Different URL for restart
   };
 
+  // Attach functionality to buttons defined in buttonActions mapping based on id's received from event
   if (event.target && buttonActions.hasOwnProperty(event.target.id)) {
     try {
+      // Assign the url to fetch from the mapping
       const response = await fetch(buttonActions[event.target.id].url);
       const text = await response.text();
 
+      // Define the detailed actions based on button id
       if (response.ok) {
         if (event.target.id == "on") {
           document.getElementById("relaystate").innerHTML = buttonActions[event.target.id].status;
@@ -108,7 +135,18 @@ document.addEventListener('click', async (event) => {
   }
 });
 
-// Add event delegation listener for all buttons within forms, to submit the nearest form with this generic function
+/*
+Event delegation listener to catch and process all forms in various HTML-fragments. OnClick 
+action is attached to all buttons whose nearest element is form. Button's default submit action
+is prevented and a JSON object is formed dynamically from the form where button resides.
+
+The form contents are sent into endpoind handling config saving and validation as JSON-object with
+POST request - server side (device) handles the form validation through configmanager setters and
+returns OK if validation passed and failed if validation did not pass (e.g. values missing or
+wrongly structured IP-address).
+
+Error or prompt to restart device is being sent back to browser from server side.
+ */
 document.addEventListener('click', async function(event) {
   // Check if the clicked element is a button inside a form
   if (event.target.tagName === 'BUTTON' && event.target.closest('form')) {
@@ -152,6 +190,12 @@ async function populateWifiForm() {
   "ssid" in configJson && (document.getElementById('ssid').value = configJson.ssid);
 };
 
+/*
+Pre-populates the Mqtt config form if configs already exist, except for passwords. The configmanager defaults to (IP Unset) and port 0
+which are handled here, to show the placeholder values if no config exist.
+
+Rest of the configs defaults to empty strings which can be simply placed onto form if value exists.
+*/
 async function populateMqttForm() {
   // In case mqttPort and mqttServer defaults to (IP Unset) or 0 we don't want to populate them. Rest of the values default to "" which are not populated.
   if (configJson.mqttServer && configJson.mqttServer !== "(IP unset)") {
@@ -173,7 +217,7 @@ async function populateMqttForm() {
 
 /*
 Function fetches the known states from device through HTTP-request, and populates the status page with
-fresh values
+fresh values. The returned WiFi -mode and mqttState are mapped to more meaningful texts.
 */
 async function populateStates() {
   // Load all the states with http request to global variable
@@ -215,7 +259,12 @@ async function populateStates() {
 }
 
 /*
-Fetch the available sensors
+Function fetches the sensor address & temperature pairs from backend after pressing "Find available sensors" -button,
+and let's user assign the inlet- and outlet temps through dropdown menu.
+
+After scanning the sensordata from user's request, if backend sent 0 sensoraddresses error message is shown. Else 
+a table of sensor addresses and current temperatures are generated and the table is added to DOM, and dropdown -menus
+are populated with available sensor addresses. User can select which address is inlet- and outletsensor and save the configs.
 */
 async function getAvailableSensors() {
   console.log("Fetchign available sensors");
@@ -281,7 +330,10 @@ async function getAvailableSensors() {
   }
 }
 
-// Function to start the status update interval
+/*
+Function starts the statusInterval that fetches sensor values for status-fragment every 5seconds when visible
+by calling the populateStates() function, which dynamically updates the UI elements.
+*/
 function startStatusInterval() {
   if (!statusInterval) {
       statusInterval = setInterval(async () => {
